@@ -3,9 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Rhythm DC — A Rhythm Plus-style Game</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    
+    <div id="app">
+        <!-- ============ MENU SCREEN ============ -->
+        <section id="menu" class="screen active">
+            <div class="menu-bg"></div>
+            <div class="menu-content">
+                <h1 class="title">
+                    <span class="title-r">R</span><span class="title-h">H</span><span class="title-y">Y</span><span class="title-t">T</span><span class="title-h2">H</span><span class="title-m">M</span>
+                    <span class="title-plus">+</span>
+                </h1>
+                <p class="subtitle">Hit the notes when they cross the line. Don't miss the beat.</p>
+
+                <div class="song-list">
+                    <h2>Select a Track</h2>
+                    <div class="songs">
+                        <button type="button" class="song-card" data-song="neon">
+                            <div class="song-art neon-art"></div>
+                            <div class="song-meta">
+                                <div class="song-title">Neon Pulse</div>
+                                <div class="song-artist">DC11 // 120 BPM</div>
+                                <div class="song-diff easy">EASY</div>
+                            </div>
+                        </button>
+                        <button type="button" class="song-card" data-song="storm">
+                            <div class="song-art storm-art"></div>
+                            <div class="song-meta">
+                                <div class="song-title">Electric Storm</div>
+                                <div class="song-artist">DC11 // 140 BPM</div>
+                                <div class="song-diff medium">MEDIUM</div>
+                            </div>
+                        </button>
+                        <button type="button" class="song-card" data-song="fury">
+                            <div class="song-art fury-art"></div>
+                            <div class="song-meta">
+                                <div class="song-title">Chrome Fury</div>
+                                <div class="song-artist">DC11 // 160 BPM</div>
+                                <div class="song-diff hard">HARD</div>
+                            </div>
+                        </button>
+                        <label class="song-card upload">
+                            <div class="song-art upload-art">+</div>
+                            <div class="song-meta">
+                                <div class="song-title">Upload MP3</div>
+                                <div class="song-artist">Use your own song</div>
+                                <div class="song-diff custom">CUSTOM</div>
+                            </div>
+                            <input type="file" id="audio-upload" accept="audio/*" hidden>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="controls-hint">
+                    <h3>Controls</h3>
+                    <div class="keys">
+                        <kbd>D</kbd><kbd>F</kbd><kbd>J</kbd><kbd>K</kbd>
+                    </div>
+                    <p>Press the key when its note reaches the bottom line</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ GAME SCREEN ============ -->
+        <section id="game" class="screen">
+            <div class="game-hud">
+                <div class="hud-left">
+                    <div class="stat">
+                        <div class="stat-label">SCORE</div>
+                        <div class="stat-value" id="score">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">COMBO</div>
+                        <div class="stat-value combo" id="combo">0</div>
+                    </div>
+                </div>
+                <div class="hud-center">
+                    <div class="track-name" id="track-name">Neon Pulse</div>
+                    <div class="progress-bar"><div id="progress-fill"></div></div>
+                </div>
+                <div class="hud-right">
+                    <div class="stat">
+                        <div class="stat-label">ACCURACY</div>
+                        <div class="stat-value" id="accuracy">100%</div>
+                    </div>
+                    <button type="button" id="pause-btn" class="icon-btn">⏸</button>
+                </div>
+            </div>
+
+            <div class="game-area">
+                <canvas id="game-canvas"></canvas>
+                <div class="judgment" id="judgment"></div>
+                <div class="lanes">
+                    <div class="lane" data-lane="0"><div class="key-label">D</div></div>
+                    <div class="lane" data-lane="1"><div class="key-label">F</div></div>
+                    <div class="lane" data-lane="2"><div class="key-label">J</div></div>
+                    <div class="lane" data-lane="3"><div class="key-label">K</div></div>
+                </div>
+            </div>
+
+            <div id="pause-menu" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Paused</h2>
+                    <button type="button" class="btn" id="resume-btn">Resume</button>
+                    <button type="button" class="btn secondary" id="restart-btn">Restart</button>
+                    <button type="button" class="btn secondary" id="quit-btn">Quit to Menu</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ RESULTS SCREEN ============ -->
+        <section id="results" class="screen">
+            <div class="results-content">
+                <h1 class="grade" id="grade">S</h1>
+                <h2 id="result-track">Neon Pulse — Cleared!</h2>
+                <div class="result-stats">
+                    <div class="result-row"><span>Final Score</span><span id="final-score">0</span></div>
+                    <div class="result-row"><span>Max Combo</span><span id="max-combo">0</span></div>
+                    <div class="result-row"><span>Accuracy</span><span id="final-accuracy">0%</span></div>
+                    <div class="result-row perfect"><span>Perfect</span><span id="count-perfect">0</span></div>
+                    <div class="result-row good"><span>Good</span><span id="count-good">0</span></div>
+                    <div class="result-row miss"><span>Miss</span><span id="count-miss">0</span></div>
+                </div>
+                <div class="result-buttons">
+                    <button type="button" class="btn" id="retry-btn">Retry</button>
+                    <button type="button" class="btn secondary" id="menu-btn">Back to Menu</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="game.js"></script>
 </body>
 </html>
