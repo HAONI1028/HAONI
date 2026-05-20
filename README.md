@@ -1,2 +1,5 @@
 # DC11_2027
-DIgital Communications work github
+Digital Communications work on github
+
+
+Not Copyrighted 2026.
