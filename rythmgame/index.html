@@ -12,6 +12,8 @@
         <section id="menu" class="screen active">
             <div class="menu-bg"></div>
             <div class="menu-content">
+                <button type="button" id="settings-btn" class="settings-btn" title="Settings">⚙</button>
+
                 <h1 class="title">
                     <span class="title-r">R</span><span class="title-h">H</span><span class="title-y">Y</span><span class="title-t">T</span><span class="title-h2">H</span><span class="title-m">M</span>
                     <span class="title-plus">+</span>
@@ -19,7 +21,7 @@
                 <p class="subtitle">Hit the notes when they cross the line. Don't miss the beat.</p>
 
                 <div class="song-list">
-                    <h2>Select a Track</h2>
+                    <h2>Synth Tracks <span class="section-tag">PROCEDURAL AUDIO</span></h2>
                     <div class="songs">
                         <button type="button" class="song-card" data-song="neon">
                             <div class="song-art neon-art"></div>
@@ -45,6 +47,22 @@
                                 <div class="song-diff hard">HARD</div>
                             </div>
                         </button>
+                        <button type="button" class="song-card" data-song="hyperdrive">
+                            <div class="song-art hyperdrive-art"></div>
+                            <div class="song-meta">
+                                <div class="song-title">Hyperdrive</div>
+                                <div class="song-artist">DC11 // 180 BPM</div>
+                                <div class="song-diff extreme">EXTREME</div>
+                            </div>
+                        </button>
+                        <button type="button" class="song-card" data-song="apocalypse">
+                            <div class="song-art apocalypse-art"></div>
+                            <div class="song-meta">
+                                <div class="song-title">Apocalypse</div>
+                                <div class="song-artist">DC11 // 200 BPM</div>
+                                <div class="song-diff insane">INSANE</div>
+                            </div>
+                        </button>
                         <label class="song-card upload">
                             <div class="song-art upload-art">+</div>
                             <div class="song-meta">
@@ -57,18 +75,81 @@
                     </div>
                 </div>
 
+                <div class="song-list">
+                    <h2>YouTube Tracks <span class="section-tag">REAL MUSIC</span></h2>
+                    <p class="section-note">Music plays via the YouTube IFrame Player API — no audio is hosted here, so no copyright issues.</p>
+                    <div class="songs" id="yt-songs">
+                        <!-- populated by JS -->
+                    </div>
+                    <div class="yt-custom">
+                        <h3>Or paste any YouTube URL</h3>
+                        <div class="yt-form">
+                            <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=...">
+                            <input type="number" id="yt-bpm" placeholder="BPM" min="40" max="300" value="128">
+                            <select id="yt-diff" title="Difficulty" aria-label="Difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                                <option value="extreme">Extreme</option>
+                                <option value="insane">Insane</option>
+                            </select>
+                            <button type="button" id="yt-play" class="btn small">PLAY</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="controls-hint">
                     <h3>Controls</h3>
                     <div class="keys">
                         <kbd>D</kbd><kbd>F</kbd><kbd>J</kbd><kbd>K</kbd>
                     </div>
-                    <p>Press the key when its note reaches the bottom line</p>
+                    <p>Press the key when its note reaches the bottom line · <kbd class="esc">Esc</kbd> to pause</p>
                 </div>
             </div>
         </section>
 
+        <!-- ============ SETTINGS MODAL ============ -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content settings-content">
+                <h2>Settings</h2>
+
+                <div class="setting-row">
+                    <label for="note-speed">Note Speed</label>
+                    <div class="slider-wrap">
+                        <input type="range" id="note-speed" min="1" max="10" step="1" value="5">
+                        <div class="slider-value" id="note-speed-value">5×</div>
+                    </div>
+                    <div class="setting-hint">Higher = faster notes, more reaction time gone</div>
+                </div>
+
+                <div class="setting-row">
+                    <label for="offset">Audio Offset (ms)</label>
+                    <div class="slider-wrap">
+                        <input type="range" id="offset" min="-200" max="200" step="5" value="0">
+                        <div class="slider-value" id="offset-value">0 ms</div>
+                    </div>
+                    <div class="setting-hint">Negative = hit earlier · Positive = hit later</div>
+                </div>
+
+                <div class="setting-row">
+                    <label for="show-video">Show YouTube Video</label>
+                    <div class="toggle-wrap">
+                        <input type="checkbox" id="show-video" checked>
+                        <label for="show-video" class="toggle"></label>
+                    </div>
+                    <div class="setting-hint">Show the YouTube video in the background during gameplay</div>
+                </div>
+
+                <button type="button" class="btn" id="settings-close">Done</button>
+            </div>
+        </div>
+
         <!-- ============ GAME SCREEN ============ -->
         <section id="game" class="screen">
+            <div id="yt-player-wrap">
+                <div id="yt-player"></div>
+            </div>
+
             <div class="game-hud">
                 <div class="hud-left">
                     <div class="stat">
@@ -101,6 +182,13 @@
                     <div class="lane" data-lane="1"><div class="key-label">F</div></div>
                     <div class="lane" data-lane="2"><div class="key-label">J</div></div>
                     <div class="lane" data-lane="3"><div class="key-label">K</div></div>
+                </div>
+            </div>
+
+            <div id="loading-overlay" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Loading…</h2>
+                    <p class="loading-text" id="loading-text">Buffering video</p>
                 </div>
             </div>
 
