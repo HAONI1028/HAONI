@@ -8,8 +8,27 @@
 </head>
 <body>
     <div id="app">
+        <!-- ============ SPLASH SCREEN ============ -->
+        <section id="splash" class="screen active">
+            <div class="splash-bg"></div>
+            <div class="splash-content">
+                <h1 class="splash-title">
+                    <span class="splash-r">R</span><span class="splash-h">H</span><span class="splash-y">Y</span><span class="splash-t">T</span><span class="splash-h2">H</span><span class="splash-m">M</span><span class="splash-plus">+</span>
+                </h1>
+                <p class="splash-tagline">A vertical scrolling rhythm game</p>
+                <div class="splash-prompt">
+                    <span class="prompt-text">PRESS ANY KEY TO START</span>
+                </div>
+                <div class="splash-footer">
+                    <span>D F J K to play</span>
+                    <span>·</span>
+                    <span>ESC to pause</span>
+                </div>
+            </div>
+        </section>
+
         <!-- ============ MENU SCREEN ============ -->
-        <section id="menu" class="screen active">
+        <section id="menu" class="screen">
             <div class="menu-bg"></div>
             <div class="menu-content">
                 <button type="button" id="settings-btn" class="settings-btn" title="Settings">⚙</button>
@@ -156,10 +175,6 @@
                         <div class="stat-label">SCORE</div>
                         <div class="stat-value" id="score">0</div>
                     </div>
-                    <div class="stat">
-                        <div class="stat-label">COMBO</div>
-                        <div class="stat-value combo" id="combo">0</div>
-                    </div>
                 </div>
                 <div class="hud-center">
                     <div class="track-name" id="track-name">Neon Pulse</div>
@@ -176,7 +191,12 @@
 
             <div class="game-area">
                 <canvas id="game-canvas"></canvas>
-                <div class="judgment" id="judgment"></div>
+                <div class="center-feedback">
+                    <div class="combo-display" id="combo-display">
+                        <span class="combo-x">×</span><span class="combo-num" id="combo">0</span>
+                    </div>
+                    <div class="judgment" id="judgment"></div>
+                </div>
                 <div class="lanes">
                     <div class="lane" data-lane="0"><div class="key-label">D</div></div>
                     <div class="lane" data-lane="1"><div class="key-label">F</div></div>

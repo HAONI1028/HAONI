@@ -58,6 +58,143 @@ button {
     color: inherit;
 }
 
+/* ============ SPLASH SCREEN ============ */
+#splash {
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.splash-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 30% 40%, rgba(255, 46, 138, 0.35), transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(0, 240, 255, 0.35), transparent 50%),
+        radial-gradient(circle at 50% 100%, rgba(177, 74, 255, 0.3), transparent 60%),
+        linear-gradient(180deg, #000 0%, var(--bg-1) 60%, var(--bg-2) 100%);
+    z-index: 0;
+    overflow: hidden;
+}
+
+.splash-bg::before,
+.splash-bg::after {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background-image:
+        linear-gradient(rgba(0, 240, 255, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.07) 1px, transparent 1px);
+    background-size: 80px 80px;
+    transform: perspective(800px) rotateX(60deg) translateY(40%);
+    animation: splashGrid 4s linear infinite;
+}
+
+.splash-bg::after {
+    transform: perspective(800px) rotateX(-60deg) translateY(-40%);
+    animation-direction: reverse;
+}
+
+@keyframes splashGrid {
+    from { background-position: 0 0; }
+    to { background-position: 80px 80px; }
+}
+
+.splash-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    padding: 40px;
+    animation: splashFadeIn 0.8s ease-out;
+}
+
+@keyframes splashFadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.splash-title {
+    font-size: 140px;
+    font-weight: 900;
+    letter-spacing: 14px;
+    margin-bottom: 12px;
+    line-height: 1;
+}
+
+.splash-title span {
+    display: inline-block;
+    background: linear-gradient(180deg, var(--neon-cyan), var(--neon-pink) 60%, var(--neon-purple));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 30px rgba(255, 46, 138, 0.6));
+    animation: splashGlow 3s ease-in-out infinite;
+}
+
+.splash-title .splash-plus {
+    color: var(--neon-yellow) !important;
+    -webkit-text-fill-color: var(--neon-yellow) !important;
+    background: none !important;
+    filter: drop-shadow(0 0 25px var(--neon-yellow));
+    vertical-align: 12px;
+    font-size: 110px;
+}
+
+@keyframes splashGlow {
+    0%, 100% { filter: drop-shadow(0 0 30px rgba(255, 46, 138, 0.6)); }
+    50% { filter: drop-shadow(0 0 50px rgba(0, 240, 255, 0.8)); }
+}
+
+.splash-tagline {
+    font-size: 14px;
+    letter-spacing: 6px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 80px;
+}
+
+.splash-prompt {
+    margin-bottom: 60px;
+}
+
+.prompt-text {
+    display: inline-block;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 6px;
+    color: var(--neon-cyan);
+    padding: 14px 32px;
+    border: 2px solid var(--neon-cyan);
+    border-radius: 50px;
+    box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset 0 0 25px rgba(0, 240, 255, 0.1);
+    animation: promptPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes promptPulse {
+    0%, 100% { box-shadow: 0 0 25px rgba(0, 240, 255, 0.4), inset 0 0 25px rgba(0, 240, 255, 0.1); opacity: 1; }
+    50% { box-shadow: 0 0 50px rgba(0, 240, 255, 0.8), inset 0 0 35px rgba(0, 240, 255, 0.2); opacity: 0.85; }
+}
+
+.splash-footer {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+}
+
+/* Fade-out animation when leaving splash */
+#splash.leaving {
+    animation: splashFadeOut 0.5s ease-in forwards;
+    pointer-events: none;
+}
+
+@keyframes splashFadeOut {
+    to { opacity: 0; transform: scale(1.1); }
+}
+
 /* ============ MENU SCREEN ============ */
 .menu-bg {
     position: absolute;
@@ -178,6 +315,7 @@ button {
     transition: all 0.3s ease;
     text-align: left;
     position: relative;
+    -webkit-backdrop-filter: blur(10px);
     backdrop-filter: blur(10px);
 }
 
@@ -463,17 +601,63 @@ kbd {
     height: 100%;
 }
 
-.judgment {
+/* ============ CENTER FEEDBACK (combo + judgment) ============ */
+.center-feedback {
     position: absolute;
     left: 50%;
-    top: 55%;
+    top: 45%;
     transform: translate(-50%, -50%);
-    font-size: 48px;
+    pointer-events: none;
+    z-index: 5;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+
+.combo-display {
+    font-weight: 900;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.3s;
+    color: var(--neon-yellow);
+    text-shadow: 0 0 25px var(--neon-yellow), 0 0 50px rgba(255, 215, 0, 0.4);
+    font-family: monospace;
+}
+
+.combo-display.visible {
+    opacity: 1;
+}
+
+.combo-display.bump {
+    animation: comboBump 0.18s ease-out;
+}
+
+.combo-x {
+    font-size: 36px;
+    vertical-align: 6px;
+    margin-right: 2px;
+    opacity: 0.8;
+}
+
+.combo-num {
+    font-size: 64px;
+    letter-spacing: 2px;
+}
+
+@keyframes comboBump {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.25); }
+    100% { transform: scale(1); }
+}
+
+.judgment {
+    font-size: 36px;
     font-weight: 900;
     letter-spacing: 4px;
-    pointer-events: none;
     opacity: 0;
-    z-index: 5;
+    min-height: 40px;
 }
 
 .judgment.show {
@@ -485,9 +669,9 @@ kbd {
 .judgment.miss { color: var(--neon-pink); text-shadow: 0 0 20px var(--neon-pink); }
 
 @keyframes judgePop {
-    0% { opacity: 0; transform: translate(-50%, -30%) scale(1.5); }
-    20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    100% { opacity: 0; transform: translate(-50%, -70%) scale(1); }
+    0%   { opacity: 0; transform: translateY(10px) scale(1.4); }
+    20%  { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-20px) scale(1); }
 }
 
 .lanes {
@@ -551,6 +735,7 @@ kbd {
     position: absolute;
     inset: 0;
     background: rgba(0, 0, 0, 0.85);
+    -webkit-backdrop-filter: blur(8px);
     backdrop-filter: blur(8px);
     display: flex;
     align-items: center;

@@ -24,13 +24,19 @@
     const SCORE_GOOD = 100;
     const COMBO_MULTIPLIER_MAX = 4;
 
+    // Hold-note release tolerance — releasing within this window of the tail
+    // end counts as a successful hold. Releasing earlier breaks combo.
+    const HOLD_RELEASE_WINDOW = 120;
+    const HOLD_BONUS = 200; // score awarded for successfully completing a hold
+
     // Difficulty presets (shared by synth & YouTube tracks)
+    // holdChance — probability that an on-beat note becomes a hold note
     const DIFFICULTY_PRESETS = {
-        easy:    { density: 0.45, doubleChance: 0.04, triplet: 0,    laneRepeatChance: 0.3 },
-        medium:  { density: 0.60, doubleChance: 0.10, triplet: 0.02, laneRepeatChance: 0.3 },
-        hard:    { density: 0.75, doubleChance: 0.20, triplet: 0.06, laneRepeatChance: 0.35 },
-        extreme: { density: 0.88, doubleChance: 0.32, triplet: 0.15, laneRepeatChance: 0.4 },
-        insane:  { density: 1.00, doubleChance: 0.55, triplet: 0.30, laneRepeatChance: 0.5 },
+        easy:    { density: 0.45, doubleChance: 0.04, triplet: 0,    laneRepeatChance: 0.3, holdChance: 0.08 },
+        medium:  { density: 0.60, doubleChance: 0.10, triplet: 0.02, laneRepeatChance: 0.3, holdChance: 0.12 },
+        hard:    { density: 0.75, doubleChance: 0.20, triplet: 0.06, laneRepeatChance: 0.35, holdChance: 0.16 },
+        extreme: { density: 0.88, doubleChance: 0.32, triplet: 0.15, laneRepeatChance: 0.4, holdChance: 0.18 },
+        insane:  { density: 1.00, doubleChance: 0.55, triplet: 0.30, laneRepeatChance: 0.5, holdChance: 0.22 },
     };
 
     // ============ SONG LIBRARIES ============
@@ -82,7 +88,7 @@
 
     // ============ STATE ============
     const state = {
-        screen: 'menu',
+        screen: 'splash',
         currentTrack: null,
         notes: [],
         startTime: 0,
@@ -103,7 +109,7 @@
 
     // ============ DOM ============
     const $ = (id) => document.getElementById(id);
-    const screens = { menu: $('menu'), game: $('game'), results: $('results') };
+    const screens = { splash: $('splash'), menu: $('menu'), game: $('game'), results: $('results') };
     const canvas = $('game-canvas');
     const ctx = canvas.getContext('2d');
 
@@ -123,6 +129,19 @@
         };
     }
 
+    function makeNote(time, lane, duration) {
+        // duration > 0 -> hold note. headJudged is set when the keydown is
+        // judged; for tap notes that immediately = full judged. For holds,
+        // .judged is only set when the tail completes (or release breaks it).
+        return {
+            time, lane,
+            duration: duration || 0,
+            judged: false,        // fully resolved (head + tail done)
+            headJudged: false,    // head was hit / missed
+            holding: false,       // currently being held
+        };
+    }
+
     function generateBeatmap(opts, seed) {
         const rand = mulberry32(seed);
         const diff = DIFFICULTY_PRESETS[opts.difficulty] || DIFFICULTY_PRESETS.medium;
@@ -137,6 +156,10 @@
         let lastLane = -1;
         const halfSub = Math.max(1, Math.floor(subdivisions / 2));
 
+        // Track when each lane is next free (so a hold note doesn't overlap
+        // with new notes spawning in the same lane while it's still held)
+        const laneBusyUntil = [0, 0, 0, 0];
+
         for (let i = 4; i < totalSteps; i++) {
             const time = leadIn + i * stepMs;
             const onBeat = i % subdivisions === 0;
@@ -146,23 +169,49 @@
                                : diff.density * 0.35;
 
             if (rand() < threshold) {
-                let lane;
-                do { lane = Math.floor(rand() * LANES); }
-                while (lane === lastLane && rand() > diff.laneRepeatChance);
+                let lane, tries = 0;
+                do {
+                    lane = Math.floor(rand() * LANES);
+                    tries++;
+                } while (
+                    (lane === lastLane && rand() > diff.laneRepeatChance && tries < 6) ||
+                    laneBusyUntil[lane] > time
+                );
+                if (laneBusyUntil[lane] > time) continue; // all lanes busy — skip step
 
-                notes.push({ time, lane, judged: false });
+                // Decide if this is a hold note. Holds only spawn on strong
+                // beats and need room (don't make one right before song ends).
+                let dur = 0;
+                if (onBeat && rand() < diff.holdChance) {
+                    // 1–2 beats long, randomly
+                    const beats = rand() < 0.6 ? 1 : 2;
+                    dur = beatMs * beats;
+                    // Don't extend past the song
+                    if (time + dur > opts.duration * 1000 - 1000) dur = 0;
+                }
+
+                notes.push(makeNote(time, lane, dur));
+                if (dur > 0) laneBusyUntil[lane] = time + dur + 100;
                 lastLane = lane;
 
                 if (onBeat && rand() < diff.doubleChance) {
                     let lane2;
-                    do { lane2 = Math.floor(rand() * LANES); } while (lane2 === lane);
-                    notes.push({ time, lane: lane2, judged: false });
+                    do { lane2 = Math.floor(rand() * LANES); }
+                    while (lane2 === lane || laneBusyUntil[lane2] > time);
+                    if (laneBusyUntil[lane2] <= time) {
+                        notes.push(makeNote(time, lane2, 0)); // doubles are always taps
+                    }
                 }
                 if (onBeat && rand() < diff.triplet) {
                     const used = new Set([lane]);
-                    let lane3;
-                    do { lane3 = Math.floor(rand() * LANES); } while (used.has(lane3));
-                    notes.push({ time, lane: lane3, judged: false });
+                    let lane3, t3 = 0;
+                    do {
+                        lane3 = Math.floor(rand() * LANES);
+                        t3++;
+                    } while ((used.has(lane3) || laneBusyUntil[lane3] > time) && t3 < 8);
+                    if (!used.has(lane3) && laneBusyUntil[lane3] <= time) {
+                        notes.push(makeNote(time, lane3, 0));
+                    }
                 }
             }
         }
@@ -415,29 +464,74 @@
         ctx.fillStyle = glowGrad;
         ctx.fillRect(playLeft, hitY, playRight - playLeft, h - hitY);
 
-        // Notes
+        // Notes — taps first, then holds get a tail
+        const pxPerMs = hitY / travelMs;
+
         for (const note of state.notes) {
             if (note.judged) continue;
             const dt = note.time - elapsedMs;
-            if (dt > travelMs + 100 || dt < -MISS_WINDOW - 50) continue;
-            const progress = 1 - dt / travelMs;
-            const y = hitY * progress;
+
+            // Skip notes far in future
+            if (dt > travelMs + 100) continue;
+            // Skip notes far in past (but for holds, the tail may still be visible)
+            const tailEndDt = dt + note.duration;
+            if (tailEndDt < -MISS_WINDOW - 50) continue;
+
             const lane = getLaneRect(note.lane, w);
             const noteH = 24, padding = 8;
             const x = lane.x + padding, noteW = lane.w - padding * 2;
+            const color = LANE_COLORS[note.lane];
 
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = LANE_COLORS[note.lane];
-            ctx.fillStyle = LANE_COLORS[note.lane];
-            roundRect(ctx, x, y - noteH / 2, noteW, noteH, 6); ctx.fill();
+            // Head Y (where the head currently is, or would be)
+            let headY = hitY * (1 - dt / travelMs);
+            // If we're holding the note and head has passed the hit line,
+            // clamp the visual head to the hit line so it doesn't slide off.
+            if (note.holding && headY > hitY) headY = hitY;
 
-            ctx.shadowBlur = 0;
-            const innerGrad = ctx.createLinearGradient(x, y - noteH / 2, x, y + noteH / 2);
-            innerGrad.addColorStop(0, 'rgba(255,255,255,0.6)');
-            innerGrad.addColorStop(0.5, 'rgba(255,255,255,0.2)');
-            innerGrad.addColorStop(1, 'rgba(255,255,255,0)');
-            ctx.fillStyle = innerGrad;
-            roundRect(ctx, x + 2, y - noteH / 2 + 2, noteW - 4, noteH - 4, 4); ctx.fill();
+            // ---- Hold tail ----
+            if (note.duration > 0) {
+                // Tail end Y (Y when the END of the hold reaches the hit line)
+                const tailY = hitY * (1 - tailEndDt / travelMs);
+                // Tail runs from tailY (top) to headY (bottom). While holding,
+                // headY is clamped to hitY so the tail visually shrinks down
+                // as it's being held.
+                const tailTop = Math.min(headY, tailY);
+                const tailBot = note.holding ? hitY : headY;
+                const tailH = tailBot - tailTop;
+                if (tailH > 0) {
+                    const tailX = x + 6;
+                    const tailW = noteW - 12;
+                    // Gradient tail
+                    ctx.globalAlpha = note.headJudged ? 0.85 : 0.6;
+                    const tailGrad = ctx.createLinearGradient(0, tailTop, 0, tailBot);
+                    tailGrad.addColorStop(0, color + '00');
+                    tailGrad.addColorStop(0.2, color + 'cc');
+                    tailGrad.addColorStop(1, color + 'ff');
+                    ctx.fillStyle = tailGrad;
+                    ctx.shadowBlur = 12;
+                    ctx.shadowColor = color;
+                    roundRect(ctx, tailX, tailTop, tailW, tailH, 4); ctx.fill();
+                    ctx.globalAlpha = 1;
+                    ctx.shadowBlur = 0;
+                }
+            }
+
+            // ---- Head ----
+            // Hide the head once it's been hit on a hold (we keep the tail rendering)
+            if (!(note.duration > 0 && note.headJudged)) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = color;
+                ctx.fillStyle = color;
+                roundRect(ctx, x, headY - noteH / 2, noteW, noteH, 6); ctx.fill();
+
+                ctx.shadowBlur = 0;
+                const innerGrad = ctx.createLinearGradient(x, headY - noteH / 2, x, headY + noteH / 2);
+                innerGrad.addColorStop(0, 'rgba(255,255,255,0.6)');
+                innerGrad.addColorStop(0.5, 'rgba(255,255,255,0.2)');
+                innerGrad.addColorStop(1, 'rgba(255,255,255,0)');
+                ctx.fillStyle = innerGrad;
+                roundRect(ctx, x + 2, headY - noteH / 2 + 2, noteW - 4, noteH - 4, 4); ctx.fill();
+            }
         }
 
         ctx.shadowBlur = 0;
@@ -472,9 +566,31 @@
         const elapsed = getElapsedMs();
 
         for (const note of state.notes) {
-            if (!note.judged && elapsed > note.time + MISS_WINDOW) {
+            if (note.judged) continue;
+
+            // Tap note missed
+            if (note.duration === 0 && !note.headJudged && elapsed > note.time + MISS_WINDOW) {
+                note.headJudged = true;
                 note.judged = true;
                 registerJudgment('miss');
+                continue;
+            }
+
+            // Hold note: head missed entirely (never pressed)
+            if (note.duration > 0 && !note.headJudged && elapsed > note.time + MISS_WINDOW) {
+                note.headJudged = true;
+                note.judged = true;
+                registerJudgment('miss');
+                continue;
+            }
+
+            // Hold note: successfully held to the end
+            if (note.duration > 0 && note.holding && elapsed >= note.time + note.duration) {
+                note.holding = false;
+                note.judged = true;
+                state.score += HOLD_BONUS;
+                $('score').textContent = state.score;
+                registerJudgment('perfect');
             }
         }
 
@@ -490,6 +606,11 @@
 
     // ============ INPUT ============
     function onKeyDown(e) {
+        // Splash screen: any key dismisses
+        if (state.screen === 'splash') {
+            dismissSplash();
+            return;
+        }
         if (e.code === 'Escape' && state.screen === 'game') {
             togglePause(); return;
         }
@@ -500,27 +621,80 @@
         document.querySelector('.lane[data-lane="' + lane + '"]')?.classList.add('pressed');
         tryHit(lane);
     }
+
+    let splashDismissing = false;
+    function dismissSplash() {
+        if (splashDismissing) return;
+        splashDismissing = true;
+        // Unlock audio context on first user gesture (browser autoplay policy)
+        try { getAudioCtx().resume(); } catch (e) { /* ignore */ }
+
+        const splash = screens.splash;
+        splash.classList.add('leaving');
+        setTimeout(() => {
+            splash.classList.remove('leaving');
+            showScreen('menu');
+        }, 500);
+    }
     function onKeyUp(e) {
         const lane = KEYS.indexOf(e.code);
         if (lane === -1) return;
         state.keyPressed[lane] = false;
         document.querySelector('.lane[data-lane="' + lane + '"]')?.classList.remove('pressed');
+        if (state.screen === 'game' && !state.paused) {
+            tryRelease(lane);
+        }
     }
+
     function tryHit(lane) {
         const elapsed = getElapsedMs();
         let best = null, bestDist = Infinity;
         for (const note of state.notes) {
-            if (note.judged || note.lane !== lane) continue;
+            if (note.judged || note.headJudged || note.lane !== lane) continue;
             const dist = Math.abs(note.time - elapsed);
             if (dist < bestDist && dist <= MISS_WINDOW) {
                 bestDist = dist; best = note;
             }
         }
         if (!best) return;
-        best.judged = true;
-        registerJudgment(bestDist <= PERFECT_WINDOW ? 'perfect'
-                       : bestDist <= GOOD_WINDOW    ? 'good'
-                       : 'miss');
+
+        const judgment = bestDist <= PERFECT_WINDOW ? 'perfect'
+                       : bestDist <= GOOD_WINDOW   ? 'good'
+                       : 'miss';
+
+        best.headJudged = true;
+        if (best.duration > 0 && judgment !== 'miss') {
+            // Hold note: head is hit, now tracking the hold
+            best.holding = true;
+            // Don't set judged=true yet — the tail still needs to be held
+            registerJudgment(judgment);
+        } else {
+            best.judged = true;
+            registerJudgment(judgment);
+        }
+    }
+
+    function tryRelease(lane) {
+        // Find the active hold note in this lane (if any)
+        const elapsed = getElapsedMs();
+        for (const note of state.notes) {
+            if (note.lane !== lane || !note.holding) continue;
+            const expectedRelease = note.time + note.duration;
+            // If released within tolerance window of the end, count as success
+            if (elapsed >= expectedRelease - HOLD_RELEASE_WINDOW) {
+                note.holding = false;
+                note.judged = true;
+                state.score += HOLD_BONUS;
+                $('score').textContent = state.score;
+                registerJudgment('perfect');
+            } else {
+                // Released too early -> break combo, count as miss
+                note.holding = false;
+                note.judged = true;
+                registerJudgment('miss');
+            }
+            return; // only one hold per lane at a time
+        }
     }
 
     function registerJudgment(type) {
@@ -537,11 +711,19 @@
         playHitSound(type);
 
         $('score').textContent = state.score;
+
         const comboEl = $('combo');
+        const comboDisplay = $('combo-display');
         comboEl.textContent = state.combo;
-        comboEl.classList.remove('bump');
-        void comboEl.offsetWidth;
-        comboEl.classList.add('bump');
+        // Show combo only when there's an active streak
+        if (state.combo > 1) {
+            comboDisplay.classList.add('visible');
+        } else {
+            comboDisplay.classList.remove('visible');
+        }
+        comboDisplay.classList.remove('bump');
+        void comboDisplay.offsetWidth;
+        if (type !== 'miss') comboDisplay.classList.add('bump');
 
         const judged = state.counts.perfect + state.counts.good + state.counts.miss;
         const acc = judged === 0 ? 100 :
@@ -662,8 +844,10 @@
         $('track-name').textContent = track.name;
         $('score').textContent = '0';
         $('combo').textContent = '0';
+        $('combo-display').classList.remove('visible', 'bump');
         $('accuracy').textContent = '100%';
         $('progress-fill').style.width = '0%';
+        const j = $('judgment'); j.className = 'judgment'; j.textContent = '';
 
         if (track.source !== 'youtube') {
             showScreen('game');
@@ -873,6 +1057,10 @@
 
         window.addEventListener('keydown', onKeyDown);
         window.addEventListener('keyup', onKeyUp);
+
+        // Splash: click or touch to dismiss
+        screens.splash.addEventListener('click', dismissSplash);
+        screens.splash.addEventListener('touchstart', dismissSplash, { passive: true });
 
         $('pause-btn').addEventListener('click', togglePause);
         $('resume-btn').addEventListener('click', togglePause);
