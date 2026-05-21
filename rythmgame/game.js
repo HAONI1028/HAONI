@@ -54,22 +54,30 @@
                       tone: { baseFreq: 220,    scale: [0, 1, 3, 6, 7, 10] } },
     };
 
-    // YouTube preset tracks. Music streams from YouTube directly — we don't
-    // host any audio. BPM is hand-tuned. Edit/add freely.
+    // YouTube preset tracks. Music streams from YouTube — we don't host any
+    // audio. These are NoCopyrightSounds / royalty-free releases that are
+    // designed to be embedded freely; major-label tracks usually return error
+    // 150 ("embedding disabled by uploader") and won't play, so we avoid them.
+    // BPM is hand-tuned. Add/edit freely — and paste your own URLs in the menu.
     const YT_SONGS = [
-        { id: 'fJ9rUzIMcZQ', title: 'Bohemian Rhapsody',       artist: 'Queen',           bpm: 144, difficulty: 'medium',  duration: 354 },
-        { id: 'dQw4w9WgXcQ', title: 'Never Gonna Give You Up', artist: 'Rick Astley',     bpm: 113, difficulty: 'easy',    duration: 213 },
-        { id: 'L_jWHffIx5E', title: 'Smells Like Teen Spirit', artist: 'Nirvana',         bpm: 117, difficulty: 'medium',  duration: 301 },
-        { id: 'OPf0YbXqDm0', title: 'Uptown Funk',             artist: 'Mark Ronson',     bpm: 115, difficulty: 'medium',  duration: 270 },
-        { id: 'kJQP7kiw5Fk', title: 'Despacito',               artist: 'Luis Fonsi',      bpm: 89,  difficulty: 'easy',    duration: 282 },
-        { id: 'JGwWNGJdvx8', title: 'Shape of You',            artist: 'Ed Sheeran',      bpm: 96,  difficulty: 'medium',  duration: 263 },
-        { id: '60ItHLz5WEA', title: 'Faded',                   artist: 'Alan Walker',     bpm: 90,  difficulty: 'medium',  duration: 212 },
-        { id: 'fLexgOxsZu0', title: 'The Spectre',             artist: 'Alan Walker',     bpm: 128, difficulty: 'hard',    duration: 215 },
-        { id: '2Vv-BfVoq4g', title: 'Perfect',                 artist: 'Ed Sheeran',      bpm: 95,  difficulty: 'easy',    duration: 263 },
-        { id: 'YykjpeuMNEk', title: 'Hymn for the Weekend',    artist: 'Coldplay',        bpm: 90,  difficulty: 'medium',  duration: 258 },
-        { id: 'pRpeEdMmmQ0', title: 'Shake It Off',            artist: 'Taylor Swift',    bpm: 160, difficulty: 'hard',    duration: 242 },
-        { id: 'gCYcHz2k5x0', title: 'On The Floor',            artist: 'Jennifer Lopez',  bpm: 130, difficulty: 'hard',    duration: 280 },
+        { id: 'bM7SZ5SBzyY', title: 'Faded',             artist: 'Alan Walker (NCS-style)', bpm: 90,  difficulty: 'medium',  duration: 212 },
+        { id: 'EP625xQIGzs', title: 'Hope',              artist: 'Tobu [NCS]',              bpm: 128, difficulty: 'medium',  duration: 233 },
+        { id: 'J2X5mJ3HDYE', title: 'Invincible',        artist: 'DEAF KEV [NCS]',          bpm: 175, difficulty: 'hard',    duration: 263 },
+        { id: '2cZ_EFAmj08', title: 'Nekozilla',         artist: 'Different Heaven [NCS]',  bpm: 110, difficulty: 'hard',    duration: 230 },
+        { id: '3nQNiWdeH2Q', title: 'Heroes Tonight',    artist: 'Janji [NCS]',             bpm: 128, difficulty: 'medium',  duration: 252 },
+        { id: 'IIrCDAV3EgI', title: 'Candyland',         artist: 'Tobu [NCS]',              bpm: 128, difficulty: 'medium',  duration: 266 },
+        { id: 'fGlap4i_Aa4', title: 'Cradles',           artist: 'Sub Urban',               bpm: 128, difficulty: 'extreme', duration: 207 },
+        { id: 'K4DyBUG242c', title: 'Cradles (Bg Mix)',  artist: 'Various',                 bpm: 128, difficulty: 'insane',  duration: 207 },
     ];
+
+    // Map of YT IFrame error codes → human messages
+    const YT_ERROR_MESSAGES = {
+        2:   'Invalid video ID. Check the URL and try again.',
+        5:   'The YouTube player ran into an HTML5 issue. Try refreshing the page.',
+        100: 'This video has been removed or marked private.',
+        101: 'The video owner does not allow it to be played in embedded players.',
+        150: 'The video owner does not allow it to be played in embedded players.',
+    };
 
     // ============ SETTINGS (persisted) ============
     const DEFAULTS = { noteSpeed: 5, offset: 0, showVideo: true };
@@ -393,12 +401,26 @@
                     if (e.data === YT.PlayerState.ENDED) onEnd();
                 },
                 onError: (e) => {
-                    alert('YouTube video could not load (code ' + e.data +
-                          '). The video may be private, deleted, age-restricted, or blocked from embedding.');
-                    quitToMenu();
+                    showYouTubeError(e.data);
                 },
             },
         });
+    }
+
+    function showYouTubeError(code) {
+        // Tear down the failed player, hide overlays, then show error modal
+        if (state.ytPlayer) {
+            try { state.ytPlayer.destroy(); } catch (e) {}
+            state.ytPlayer = null;
+        }
+        state.ytReady = false;
+        state.useYtClock = false;
+        $('loading-overlay').classList.add('hidden');
+        $('yt-player-wrap').classList.add('hidden');
+
+        const msg = YT_ERROR_MESSAGES[code] || ('Unknown YouTube error (code ' + code + ').');
+        $('yt-error-text').textContent = msg + ' (Error ' + code + ')';
+        $('yt-error-modal').classList.remove('hidden');
     }
 
     function parseYouTubeId(url) {
@@ -987,31 +1009,53 @@
     }
 
     // ============ SETTINGS UI ============
-    function initSettingsUI() {
+    // The menu settings modal and the pause menu both expose the same
+    // controls — `syncSettingsUI` keeps both views in sync.
+    function syncSettingsUI() {
+        const speedTxt = settings.noteSpeed + '×';
+        const offsetTxt = settings.offset + ' ms';
         $('note-speed').value = settings.noteSpeed;
-        $('note-speed-value').textContent = settings.noteSpeed + '×';
+        $('note-speed-value').textContent = speedTxt;
         $('offset').value = settings.offset;
-        $('offset-value').textContent = settings.offset + ' ms';
+        $('offset-value').textContent = offsetTxt;
         $('show-video').checked = settings.showVideo;
+        $('pause-note-speed').value = settings.noteSpeed;
+        $('pause-note-speed-value').textContent = speedTxt;
+        $('pause-offset').value = settings.offset;
+        $('pause-offset-value').textContent = offsetTxt;
+        $('pause-show-video').checked = settings.showVideo;
+    }
 
-        $('note-speed').addEventListener('input', (e) => {
+    function applyShowVideo() {
+        const wrap = $('yt-player-wrap');
+        if (wrap && !wrap.classList.contains('hidden')) {
+            wrap.classList.toggle('dim', !settings.showVideo);
+        }
+    }
+
+    function initSettingsUI() {
+        syncSettingsUI();
+
+        // Helper to wire a slider/toggle pair (menu + pause) to a setting
+        const onNoteSpeed = (e) => {
             settings.noteSpeed = parseInt(e.target.value, 10);
-            $('note-speed-value').textContent = settings.noteSpeed + '×';
-            saveSettings(settings);
-        });
-        $('offset').addEventListener('input', (e) => {
+            saveSettings(settings); syncSettingsUI();
+        };
+        const onOffset = (e) => {
             settings.offset = parseInt(e.target.value, 10);
-            $('offset-value').textContent = settings.offset + ' ms';
-            saveSettings(settings);
-        });
-        $('show-video').addEventListener('change', (e) => {
+            saveSettings(settings); syncSettingsUI();
+        };
+        const onShowVideo = (e) => {
             settings.showVideo = e.target.checked;
-            saveSettings(settings);
-            const wrap = $('yt-player-wrap');
-            if (wrap && !wrap.classList.contains('hidden')) {
-                wrap.classList.toggle('dim', !settings.showVideo);
-            }
-        });
+            saveSettings(settings); syncSettingsUI(); applyShowVideo();
+        };
+
+        $('note-speed').addEventListener('input', onNoteSpeed);
+        $('pause-note-speed').addEventListener('input', onNoteSpeed);
+        $('offset').addEventListener('input', onOffset);
+        $('pause-offset').addEventListener('input', onOffset);
+        $('show-video').addEventListener('change', onShowVideo);
+        $('pause-show-video').addEventListener('change', onShowVideo);
 
         $('settings-btn').addEventListener('click', () => {
             $('settings-modal').classList.remove('hidden');
@@ -1068,6 +1112,11 @@
         $('quit-btn').addEventListener('click', quitToMenu);
         $('retry-btn').addEventListener('click', restartCurrent);
         $('menu-btn').addEventListener('click', () => showScreen('menu'));
+
+        $('yt-error-close').addEventListener('click', () => {
+            $('yt-error-modal').classList.add('hidden');
+            quitToMenu();
+        });
 
         window.addEventListener('resize', resizeCanvas);
 

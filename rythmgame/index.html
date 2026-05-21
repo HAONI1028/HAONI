@@ -95,16 +95,16 @@
                 </div>
 
                 <div class="song-list">
-                    <h2>YouTube Tracks <span class="section-tag">REAL MUSIC</span></h2>
-                    <p class="section-note">Music plays via the YouTube IFrame Player API — no audio is hosted here, so no copyright issues.</p>
+                    <h2>YouTube Tracks <span class="section-tag">STREAMS FROM YT</span></h2>
+                    <p class="section-note">Music plays via the YouTube IFrame Player API — no audio is hosted here. Many official music videos (VEVO etc.) block embedding, so the demo list uses royalty-free / NCS tracks. Paste any YouTube URL to try your own.</p>
                     <div class="songs" id="yt-songs">
                         <!-- populated by JS -->
                     </div>
                     <div class="yt-custom">
-                        <h3>Or paste any YouTube URL</h3>
+                        <h3>Paste any YouTube URL</h3>
                         <div class="yt-form">
                             <input type="text" id="yt-url" placeholder="https://www.youtube.com/watch?v=...">
-                            <input type="number" id="yt-bpm" placeholder="BPM" min="40" max="300" value="128">
+                            <input type="number" id="yt-bpm" placeholder="BPM" min="40" max="300" value="128" title="BPM" aria-label="BPM">
                             <select id="yt-diff" title="Difficulty" aria-label="Difficulty">
                                 <option value="easy">Easy</option>
                                 <option value="medium" selected>Medium</option>
@@ -114,6 +114,7 @@
                             </select>
                             <button type="button" id="yt-play" class="btn small">PLAY</button>
                         </div>
+                        <p class="yt-tip">Tip: if a video errors out (code 150), the uploader has disabled embedding — try a different one.</p>
                     </div>
                 </div>
 
@@ -213,11 +214,45 @@
             </div>
 
             <div id="pause-menu" class="modal hidden">
-                <div class="modal-content">
+                <div class="modal-content pause-content">
                     <h2>Paused</h2>
+
+                    <div class="pause-settings">
+                        <div class="setting-row compact">
+                            <label for="pause-note-speed">Note Speed</label>
+                            <div class="slider-wrap">
+                                <input type="range" id="pause-note-speed" min="1" max="10" step="1" value="5">
+                                <div class="slider-value" id="pause-note-speed-value">5×</div>
+                            </div>
+                        </div>
+                        <div class="setting-row compact">
+                            <label for="pause-offset">Audio Offset</label>
+                            <div class="slider-wrap">
+                                <input type="range" id="pause-offset" min="-200" max="200" step="5" value="0">
+                                <div class="slider-value" id="pause-offset-value">0 ms</div>
+                            </div>
+                        </div>
+                        <div class="setting-row compact toggle-row">
+                            <label for="pause-show-video">Show YouTube Video</label>
+                            <div class="toggle-wrap">
+                                <input type="checkbox" id="pause-show-video" checked>
+                                <label for="pause-show-video" class="toggle"></label>
+                            </div>
+                        </div>
+                    </div>
+
                     <button type="button" class="btn" id="resume-btn">Resume</button>
                     <button type="button" class="btn secondary" id="restart-btn">Restart</button>
                     <button type="button" class="btn secondary" id="quit-btn">Quit to Menu</button>
+                </div>
+            </div>
+
+            <div id="yt-error-modal" class="modal hidden">
+                <div class="modal-content">
+                    <h2>Video Unavailable</h2>
+                    <p class="error-text" id="yt-error-text">This YouTube video can't be played here.</p>
+                    <p class="error-hint">Try a different video — many official uploads (VEVO, label channels) disable embedding to protect copyright.</p>
+                    <button type="button" class="btn" id="yt-error-close">Back to Menu</button>
                 </div>
             </div>
         </section>
