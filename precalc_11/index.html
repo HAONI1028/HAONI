@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pre-Calculus 11 — Units</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBFAF7;
+    --card:#FFFFFF;
+    --ink:#1A1D29;
+    --muted:#6B7280;
+    --line:#E7E4DC;
+    --brand:#0F766E;
+    --brand-soft:#E4F1EF;
+    --amber:#B45309;
+    --amber-soft:#FBF0DF;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(26,29,41,.04), 0 8px 24px rgba(26,29,41,.06);
+    --shadow-lift:0 2px 4px rgba(26,29,41,.05), 0 18px 40px rgba(26,29,41,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:16px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:28px 16px 72px;
+  }
+  .wrap{max-width:720px;margin:0 auto}
+
+  .crumbs{
+    font-size:13px;color:var(--muted);margin-bottom:22px;
+    font-family:'Space Grotesk',sans-serif;font-weight:500;
+  }
+  .crumbs a{color:var(--brand);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{margin:0 8px;color:var(--line)}
+
+  .kicker{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--brand);font-weight:600;margin-bottom:8px;
+  }
+  .title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:32px;line-height:1.08;letter-spacing:-.015em;margin:0;
+  }
+  .sub{color:var(--muted);font-size:15px;margin-top:10px}
+
+  .units{display:grid;gap:14px;margin-top:30px}
+
+  .unit{
+    display:flex;align-items:center;gap:16px;text-decoration:none;color:inherit;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:18px 20px;position:relative;
+    transition:transform .12s ease, box-shadow .18s ease, border-color .18s ease;
+  }
+  .unit.live:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);border-color:var(--brand)}
+
+  .num{
+    flex:none;width:44px;height:44px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:18px;
+    background:var(--brand-soft);color:var(--brand);
+  }
+  .unit.soon .num{background:#F3F1EC;color:var(--muted)}
+
+  .body{flex:1;min-width:0}
+  .unit h2{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px;
+    margin:0 0 3px;letter-spacing:-.01em;
+  }
+  .unit p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.4}
+
+  .right{flex:none;display:flex;align-items:center;gap:12px}
+  .pill{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;
+    font-size:11px;letter-spacing:.05em;text-transform:uppercase;
+    padding:4px 10px;border-radius:20px;
+  }
+  .pill.ready{color:var(--brand);background:var(--brand-soft)}
+  .pill.soon{color:var(--amber);background:var(--amber-soft)}
+  .arrow{color:var(--brand);font-family:'Space Grotesk',sans-serif;font-weight:700;transition:transform .18s ease}
+  .unit.live:hover .arrow{transform:translateX(4px)}
+
+  .unit.soon{opacity:.72;cursor:default}
+
+  @media(max-width:460px){
+    .unit p{display:none}
+    .right .pill{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumbs"><a href="../index.html">Courses</a><span class="sep">/</span>Pre-Calculus 11</nav>
+
+  <header>
+    <div class="kicker">Pre-Calculus 11</div>
+    <h1 class="title">Units</h1>
+    <p class="sub">Choose a unit to start practicing. Each set is randomized and gives instant feedback with traps and tips.</p>
+  </header>
+
+  <div class="units">
+
+    <a class="unit live" href="radicals.html">
+      <div class="num">1</div>
+      <div class="body">
+        <h2>Radicals &amp; Rational Exponents</h2>
+        <p>Exponent laws, simplifying radicals, rationalizing, and radical equations.</p>
+      </div>
+      <div class="right">
+        <span class="pill ready">Ready</span>
+        <span class="arrow">→</span>
+      </div>
+    </a>
+
+    <div class="unit soon" aria-disabled="true">
+      <div class="num">2</div>
+      <div class="body">
+        <h2>Quadratic Functions</h2>
+        <p>Vertex &amp; standard form, graphing, and transformations.</p>
+      </div>
+      <div class="right"><span class="pill soon">Coming soon</span></div>
+    </div>
+
+    <div class="unit soon" aria-disabled="true">
+      <div class="num">3</div>
+      <div class="body">
+        <h2>Quadratic Equations</h2>
+        <p>Factoring, completing the square, and the quadratic formula.</p>
+      </div>
+      <div class="right"><span class="pill soon">Coming soon</span></div>
+    </div>
+
+    <div class="unit soon" aria-disabled="true">
+      <div class="num">4</div>
+      <div class="body">
+        <h2>Rational Expressions</h2>
+        <p>Simplify, multiply, divide, add, and solve rational equations.</p>
+      </div>
+      <div class="right"><span class="pill soon">Coming soon</span></div>
+    </div>
+
+    <div class="unit soon" aria-disabled="true">
+      <div class="num">5</div>
+      <div class="body">
+        <h2>Trigonometry</h2>
+        <p>The sine and cosine laws and non-right triangle problems.</p>
+      </div>
+      <div class="right"><span class="pill soon">Coming soon</span></div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
