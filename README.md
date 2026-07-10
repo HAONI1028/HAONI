@@ -1,10 +1,3 @@
-# DC11_2027
-Digital Communications work on github
+# A GITHUB PAGE FOR HAONI's CODING STUFF
 
-
-starting september 2026
-
-https://claude.ai
-
-Claude Code Productions.
-Not Copyrighted 2026.
+im too lazy to write things here.
