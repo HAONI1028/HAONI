@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trigonometry — Challenge Test · Pre-Calculus 11</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FBFAF7;
+    --card:#FFFFFF;
+    --ink:#1A1D29;
+    --muted:#6B7280;
+    --line:#E7E4DC;
+    --brand:#0F766E;      /* pine teal */
+    --brand-soft:#E4F1EF;
+    --correct:#16A34A;
+    --correct-soft:#E9F7EE;
+    --wrong:#DC2626;
+    --wrong-soft:#FDECEC;
+    --amber:#B45309;
+    --amber-soft:#FBF0DF;
+    --radius:14px;
+    --shadow:0 1px 2px rgba(26,29,41,.04), 0 8px 24px rgba(26,29,41,.06);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:20px 16px 64px;
+  }
+  .wrap{max-width:640px;margin:0 auto}
+  .katex{font-size:1.02em}
+
+  /* header */
+  .crumbs{
+    font-family:'Space Grotesk',sans-serif;font-weight:500;
+    font-size:13px;color:var(--muted);margin-bottom:18px;
+  }
+  .crumbs a{color:var(--brand);text-decoration:none}
+  .crumbs a:hover{text-decoration:underline}
+  .crumbs .sep{margin:0 8px;color:var(--line)}
+  .masthead{margin-bottom:18px}
+  .kicker{
+    font-family:'Space Grotesk',sans-serif;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--brand);font-weight:600;margin-bottom:6px;
+  }
+  .title{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;font-size:27px;line-height:1.1;letter-spacing:-.01em;margin:0;
+  }
+  .title .rad{
+    border-top:2px solid var(--ink);padding:2px 4px 0;margin-left:2px;
+  }
+  .sub{color:var(--muted);font-size:14px;margin-top:8px}
+
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px;
+  }
+
+  /* start screen */
+  .lede{font-size:15px;color:var(--ink)}
+  .topics{list-style:none;margin:18px 0 0;padding:0;display:grid;gap:8px}
+  .topics li{
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:14px;padding:10px 12px;background:var(--paper);
+    border:1px solid var(--line);border-radius:10px;
+  }
+  .topics li span:last-child{color:var(--muted);font-family:'Space Grotesk',sans-serif;font-weight:500}
+  .note{
+    margin-top:16px;font-size:13px;color:var(--muted);
+    display:flex;gap:8px;align-items:flex-start;
+  }
+  .note b{color:var(--ink);font-weight:600}
+
+  .btn{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;
+    border:none;border-radius:11px;padding:14px 20px;cursor:pointer;
+    background:var(--brand);color:#fff;width:100%;transition:transform .08s ease, background .15s ease, opacity .15s ease;
+  }
+  .btn:hover{background:#0c5f59}
+  .btn:active{transform:translateY(1px)}
+  .btn:disabled{opacity:.4;cursor:not-allowed;background:var(--brand)}
+  .btn:disabled:hover{background:var(--brand)}
+  .btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+  .btn.ghost:hover{background:var(--brand-soft)}
+  .btn-row{display:grid;gap:10px;margin-top:22px}
+  @media(min-width:480px){.btn-row.two{grid-template-columns:1fr 1fr}}
+
+  /* progress */
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+  .counter{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px}
+  .counter .qn{border-top:2px solid var(--ink);padding-top:2px;display:inline-block}
+  .score-chip{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;
+    color:var(--brand);background:var(--brand-soft);padding:5px 11px;border-radius:20px;
+  }
+  .track{height:6px;background:var(--line);border-radius:6px;overflow:hidden;margin-bottom:20px}
+  .fill{height:100%;background:var(--brand);border-radius:6px;transition:width .35s cubic-bezier(.4,0,.2,1);width:0}
+
+  .tag{
+    display:inline-block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+    font-weight:600;color:var(--brand);background:var(--brand-soft);
+    padding:4px 10px;border-radius:20px;margin-bottom:14px;font-family:'Space Grotesk',sans-serif;
+  }
+  .question{font-size:18px;line-height:1.45;margin:0 0 18px;font-weight:500}
+
+  .options{display:grid;gap:10px}
+  .opt{
+    text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:11px;
+    padding:14px 15px;font-size:16px;cursor:pointer;color:var(--ink);
+    display:flex;gap:12px;align-items:center;transition:border-color .12s ease, background .12s ease;
+    font-family:'Inter',sans-serif;line-height:1.4;
+  }
+  .opt:hover:not(:disabled){border-color:var(--brand)}
+  .opt:disabled{cursor:default}
+  .opt .letter{
+    flex:none;width:26px;height:26px;border-radius:7px;background:var(--paper);
+    border:1px solid var(--line);display:grid;place-items:center;
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;color:var(--muted);
+  }
+  /* pre-confirm selection */
+  .opt.selected{border-color:var(--brand);background:var(--brand-soft)}
+  .opt.selected .letter{background:var(--brand);color:#fff;border-color:var(--brand)}
+  /* graded */
+  .opt.correct{border-color:var(--correct);background:var(--correct-soft)}
+  .opt.correct .letter{background:var(--correct);color:#fff;border-color:var(--correct)}
+  .opt.wrong{border-color:var(--wrong);background:var(--wrong-soft)}
+  .opt.wrong .letter{background:var(--wrong);color:#fff;border-color:var(--wrong)}
+
+  .confirm-hint{
+    margin-top:14px;font-size:12.5px;color:var(--muted);text-align:center;
+    font-family:'Space Grotesk',sans-serif;letter-spacing:.02em;
+  }
+
+  /* feedback */
+  .feedback{margin-top:18px;border-radius:12px;padding:16px;border:1px solid var(--line);animation:rise .28s ease}
+  .feedback.ok{background:var(--correct-soft);border-color:#BFE7CC}
+  .feedback.no{background:var(--wrong-soft);border-color:#F4CDCD}
+  .feedback.skip{background:var(--paper);border-color:var(--line)}
+  .feedback.skip .verdict{color:var(--muted)}
+  .btn.subtle{background:transparent;color:var(--muted);border:1.5px dashed var(--line)}
+  .btn.subtle:hover{background:var(--paper);color:var(--ink);border-color:var(--muted)}
+  .verdict{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .feedback.ok .verdict{color:var(--correct)}
+  .feedback.no .verdict{color:var(--wrong)}
+  .explain{font-size:14.5px;line-height:1.55;color:var(--ink)}
+  .flag{margin-top:12px;font-size:13.5px;line-height:1.5;padding-left:12px;border-left:3px solid;}
+  .flag.trap{border-color:var(--amber);color:#5c3d0e}
+  .flag.tip{border-color:var(--brand);color:#0b4e49}
+  .flag .lbl{
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;margin-right:6px;
+  }
+  .flag.trap .lbl{color:var(--amber)}
+  .flag.tip .lbl{color:var(--brand)}
+
+  @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes swap{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .anim{animation:swap .3s ease}
+
+  /* results */
+  .score-big{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:52px;line-height:1;text-align:center;letter-spacing:-.02em}
+  .score-big small{font-size:24px;color:var(--muted);font-weight:500}
+  .pct{text-align:center;font-family:'Space Grotesk',sans-serif;font-weight:600;color:var(--brand);margin-top:6px;font-size:18px}
+  .verdict-line{text-align:center;color:var(--muted);font-size:14.5px;margin-top:10px}
+  .breakdown{margin-top:22px;display:grid;gap:10px}
+  .brow{display:flex;align-items:center;gap:12px}
+  .brow .name{flex:none;width:170px;font-size:13.5px;font-weight:500}
+  .brow .bar{flex:1;height:8px;background:var(--line);border-radius:8px;overflow:hidden}
+  .brow .bar i{display:block;height:100%;background:var(--brand);border-radius:8px}
+  .brow .frac{flex:none;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:600;color:var(--muted);width:42px;text-align:right}
+
+  /* review */
+  .rev-item{border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:12px;background:var(--card)}
+  .rev-q{font-weight:500;font-size:15.5px;margin-bottom:10px}
+  .rev-q .qnum{font-family:'Space Grotesk',sans-serif;color:var(--muted);font-weight:600;margin-right:8px}
+  .rev-a{font-size:14px;padding:8px 12px;border-radius:9px;margin-bottom:6px;display:flex;gap:8px}
+  .rev-a.you-wrong{background:var(--wrong-soft);color:#7a1b1b}
+  .rev-a.correct{background:var(--correct-soft);color:#155e30}
+  .rev-a .mk{font-family:'Space Grotesk',sans-serif;font-weight:600;flex:none}
+  .rev-exp{font-size:13.5px;color:var(--muted);margin-top:8px;line-height:1.5}
+  .rev-flags{margin-top:8px}
+
+  .report{
+    width:100%;margin-top:16px;min-height:230px;resize:vertical;
+    font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:12.5px;line-height:1.5;
+    color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:11px;
+    padding:14px;white-space:pre;overflow:auto;-webkit-overflow-scrolling:touch;
+  }
+  .report:focus{outline:2px solid var(--brand);outline-offset:1px;border-color:var(--brand)}
+
+  /* records page */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 16px}
+  @media(max-width:479px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:12px 8px;text-align:center}
+  .stat .v{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--ink);line-height:1}
+  .stat .k{font-size:10.5px;color:var(--muted);margin-top:5px;letter-spacing:.05em;text-transform:uppercase}
+  .spark{display:flex;align-items:flex-end;gap:5px;height:78px;margin:0 0 6px;padding:16px 10px 8px;background:var(--paper);border:1px solid var(--line);border-radius:11px}
+  .spark .b{flex:1;background:var(--brand);border-radius:4px 4px 0 0;min-height:3px;position:relative;opacity:.85}
+  .spark .b:last-child{opacity:1}
+  .spark .b span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted);font-family:'Space Grotesk',sans-serif;margin-bottom:3px}
+  .spark-cap{text-align:center;font-size:11px;color:var(--muted);margin:0 0 18px}
+  .sec-h{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:15px;margin:22px 0 10px}
+  .run{border:1px solid var(--line);border-radius:11px;margin-bottom:10px;background:var(--card)}
+  .run>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 15px}
+  .run>summary::-webkit-details-marker{display:none}
+  .run .rdate{font-weight:500;color:var(--ink);font-size:14px}
+  .run[open]>summary{border-bottom:1px solid var(--line)}
+  .run .rbody{padding:4px 15px 14px}
+  .run .rnone{padding:12px 15px;color:var(--correct);font-size:13.5px}
+  .miss{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:11px 12px;margin-top:10px;font-size:14px}
+  .miss .mtop{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--brand);font-weight:600;font-family:'Space Grotesk',sans-serif;margin-bottom:6px}
+  .miss .ml{display:flex;gap:7px;margin-top:5px;font-size:13.5px}
+  .miss .ml.bad{color:#7a1b1b}
+  .miss .ml.good{color:#155e30}
+  .miss .ml b{font-weight:600;flex:none}
+
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="crumbs">
+    <a href="../index.html">Courses</a><span class="sep">/</span><a href="index.html">Pre-Calculus 11</a><span class="sep">/</span>Trigonometry
+  </nav>
+  <div class="masthead">
+    <div class="kicker">Pre-Calculus 11 · Trigonometry</div>
+    <h1 class="title">Trigonometry <span class="rad">Challenge Test</span></h1>
+    <div class="sub" id="subline">50 harder randomized questions each attempt · retake for a fresh set</div>
+  </div>
+  <div id="app"></div>
+  <div class="foot">Pick an option, then press <b>Confirm</b> — or <b>Skip</b> a too-easy one (it won't count toward your score or total). Use <b>Previous</b> to revisit earlier questions.</div>
+</div>
+
+<script>
+/* =========================================================================
+   CHALLENGE QUESTION BANK — harder, multi-step problems built from the
+   Section 2.0–2.5 notes (Exponent Laws, Rational Exponents, Simplifying /
+   Mixed & Entire Radicals, Add & Subtract, Multiply & Divide, Rationalizing,
+   Radical Equations & Restrictions).
+   The correct option is written first (answer:0); options are SHUFFLED at
+   runtime so on-screen position is randomized. All answers verified numerically.
+   ========================================================================= */
+const QUESTIONS = [
+  // ================= ANGLES IN STANDARD POSITION =================
+  {topic:"Standard Position", q:`Find the reference angle for \\(150^{\\circ}\\).`,
+   options:[`\\(30^{\\circ}\\)`,`\\(150^{\\circ}\\)`,`\\(60^{\\circ}\\)`,`\\(210^{\\circ}\\)`], answer:0,
+   trap:`In Quadrant II the reference angle is \\(180^{\\circ}-150^{\\circ}=30^{\\circ}\\).`,
+   tip:`QII: subtract from \\(180^{\\circ}\\).`},
+
+  {topic:"Standard Position", q:`Find the reference angle for \\(210^{\\circ}\\).`,
+   options:[`\\(30^{\\circ}\\)`,`\\(60^{\\circ}\\)`,`\\(210^{\\circ}\\)`,`\\(150^{\\circ}\\)`], answer:0,
+   trap:`In Quadrant III the reference angle is \\(210^{\\circ}-180^{\\circ}=30^{\\circ}\\).`,
+   tip:`QIII: subtract \\(180^{\\circ}\\).`},
+
+  {topic:"Standard Position", q:`Find the reference angle for \\(300^{\\circ}\\).`,
+   options:[`\\(60^{\\circ}\\)`,`\\(30^{\\circ}\\)`,`\\(120^{\\circ}\\)`,`\\(300^{\\circ}\\)`], answer:0,
+   trap:`In Quadrant IV the reference angle is \\(360^{\\circ}-300^{\\circ}=60^{\\circ}\\).`,
+   tip:`QIV: subtract from \\(360^{\\circ}\\).`},
+
+  {topic:"Standard Position", q:`In which quadrant does the terminal arm of \\(225^{\\circ}\\) lie?`,
+   options:[`III`,`II`,`IV`,`I`], answer:0,
+   trap:`\\(180^{\\circ}<225^{\\circ}<270^{\\circ}\\), so it is Quadrant III.`,
+   tip:`QI: 0–90, QII: 90–180, QIII: 180–270, QIV: 270–360.`},
+
+  {topic:"Standard Position", q:`In which quadrant is \\(\\sin\\theta>0\\) and \\(\\cos\\theta<0\\)?`,
+   options:[`II`,`I`,`III`,`IV`], answer:0,
+   trap:`Sine positive, cosine negative happens only in Quadrant II.`,
+   tip:`Use CAST: only Sine is positive in QII.`},
+
+  {topic:"Standard Position", q:`Cosine is positive in which quadrants?`,
+   options:[`I and IV`,`I and II`,`II and III`,`III and IV`], answer:0,
+   trap:`By CAST, cosine is positive in QI (All) and QIV (Cosine).`,
+   tip:`\\(\\cos\\theta=\\tfrac{x}{r}\\) is positive where \\(x>0\\).`},
+
+  {topic:"Standard Position", q:`The point \\((-3,4)\\) lies on the terminal arm of \\(\\theta\\). Then \\(r=\\)`,
+   options:[`\\(5\\)`,`\\(7\\)`,`\\(1\\)`,`\\(25\\)`], answer:0,
+   trap:`\\(r=\\sqrt{(-3)^{2}+4^{2}}=\\sqrt{9+16}=5\\).`,
+   tip:`\\(r=\\sqrt{x^{2}+y^{2}}\\) is always positive.`},
+
+  {topic:"Standard Position", q:`For the point \\((-3,4)\\) on the terminal arm, \\(\\cos\\theta=\\)`,
+   options:[`\\(-\\tfrac35\\)`,`\\(\\tfrac35\\)`,`\\(-\\tfrac45\\)`,`\\(\\tfrac45\\)`], answer:0,
+   trap:`\\(\\cos\\theta=\\tfrac{x}{r}=\\tfrac{-3}{5}\\).`,
+   tip:`Cosine uses the \\(x\\)-coordinate over \\(r\\).`},
+
+  {topic:"Standard Position", q:`If \\(\\theta\\) terminates in Quadrant III, then \\(\\tan\\theta\\) is:`,
+   options:[`positive`,`negative`,`zero`,`undefined`], answer:0,
+   trap:`In QIII both \\(x<0\\) and \\(y<0\\), so \\(\\tan\\theta=\\tfrac{y}{x}>0\\).`,
+   tip:`Tangent is positive in QI and QIII.`},
+
+  // ================= REFERENCE ANGLES & EXACT RATIOS =================
+  {topic:"Exact Ratios", q:`Evaluate \\(\\sin 30^{\\circ}\\).`,
+   options:[`\\(\\tfrac12\\)`,`\\(\\tfrac{\\sqrt3}{2}\\)`,`\\(\\tfrac{\\sqrt2}{2}\\)`,`\\(1\\)`], answer:0,
+   trap:`From the \\(30\\)-\\(60\\)-\\(90\\) triangle, \\(\\sin30^{\\circ}=\\tfrac12\\).`,
+   tip:`\\(\\sin30^{\\circ}=\\tfrac12\\), \\(\\sin60^{\\circ}=\\tfrac{\\sqrt3}{2}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\cos 60^{\\circ}\\).`,
+   options:[`\\(\\tfrac12\\)`,`\\(\\tfrac{\\sqrt3}{2}\\)`,`\\(\\tfrac{\\sqrt2}{2}\\)`,`\\(0\\)`], answer:0,
+   trap:`\\(\\cos60^{\\circ}=\\tfrac12\\) (same as \\(\\sin30^{\\circ}\\)).`,
+   tip:`\\(\\cos60^{\\circ}=\\sin30^{\\circ}=\\tfrac12\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\tan 45^{\\circ}\\).`,
+   options:[`\\(1\\)`,`\\(0\\)`,`\\(\\tfrac{\\sqrt2}{2}\\)`,`\\(\\sqrt3\\)`], answer:0,
+   trap:`The \\(45\\)-\\(45\\)-\\(90\\) triangle has equal legs, so \\(\\tan45^{\\circ}=1\\).`,
+   tip:`Opposite = adjacent at \\(45^{\\circ}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\sin 60^{\\circ}\\).`,
+   options:[`\\(\\tfrac{\\sqrt3}{2}\\)`,`\\(\\tfrac12\\)`,`\\(\\tfrac{\\sqrt2}{2}\\)`,`\\(\\sqrt3\\)`], answer:0,
+   trap:`\\(\\sin60^{\\circ}=\\tfrac{\\sqrt3}{2}\\).`,
+   tip:`The larger acute angle has the larger sine.`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\sin 45^{\\circ}\\).`,
+   options:[`\\(\\tfrac{\\sqrt2}{2}\\)`,`\\(\\tfrac12\\)`,`\\(\\tfrac{\\sqrt3}{2}\\)`,`\\(1\\)`], answer:0,
+   trap:`\\(\\sin45^{\\circ}=\\tfrac{1}{\\sqrt2}=\\tfrac{\\sqrt2}{2}\\).`,
+   tip:`Rationalize \\(\\tfrac{1}{\\sqrt2}\\) to \\(\\tfrac{\\sqrt2}{2}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\cos 150^{\\circ}\\).`,
+   options:[`\\(-\\tfrac{\\sqrt3}{2}\\)`,`\\(\\tfrac{\\sqrt3}{2}\\)`,`\\(-\\tfrac12\\)`,`\\(\\tfrac12\\)`], answer:0,
+   trap:`Reference angle \\(30^{\\circ}\\) in QII, where cosine is negative: \\(-\\tfrac{\\sqrt3}{2}\\).`,
+   tip:`\\(\\cos150^{\\circ}=-\\cos30^{\\circ}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\sin 210^{\\circ}\\).`,
+   options:[`\\(-\\tfrac12\\)`,`\\(\\tfrac12\\)`,`\\(-\\tfrac{\\sqrt3}{2}\\)`,`\\(\\tfrac{\\sqrt3}{2}\\)`], answer:0,
+   trap:`Reference angle \\(30^{\\circ}\\) in QIII, where sine is negative: \\(-\\tfrac12\\).`,
+   tip:`\\(\\sin210^{\\circ}=-\\sin30^{\\circ}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\tan 135^{\\circ}\\).`,
+   options:[`\\(-1\\)`,`\\(1\\)`,`\\(-\\sqrt3\\)`,`\\(0\\)`], answer:0,
+   trap:`Reference angle \\(45^{\\circ}\\) in QII, where tangent is negative: \\(-1\\).`,
+   tip:`\\(\\tan135^{\\circ}=-\\tan45^{\\circ}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\cos 240^{\\circ}\\).`,
+   options:[`\\(-\\tfrac12\\)`,`\\(\\tfrac12\\)`,`\\(-\\tfrac{\\sqrt3}{2}\\)`,`\\(\\tfrac{\\sqrt3}{2}\\)`], answer:0,
+   trap:`Reference angle \\(60^{\\circ}\\) in QIII, where cosine is negative: \\(-\\tfrac12\\).`,
+   tip:`\\(\\cos240^{\\circ}=-\\cos60^{\\circ}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\sin 300^{\\circ}\\).`,
+   options:[`\\(-\\tfrac{\\sqrt3}{2}\\)`,`\\(\\tfrac{\\sqrt3}{2}\\)`,`\\(-\\tfrac12\\)`,`\\(\\tfrac12\\)`], answer:0,
+   trap:`Reference angle \\(60^{\\circ}\\) in QIV, where sine is negative: \\(-\\tfrac{\\sqrt3}{2}\\).`,
+   tip:`\\(\\sin300^{\\circ}=-\\sin60^{\\circ}\\).`},
+
+  {topic:"Exact Ratios", q:`Evaluate \\(\\cos 180^{\\circ}\\).`,
+   options:[`\\(-1\\)`,`\\(1\\)`,`\\(0\\)`,`\\(-\\tfrac12\\)`], answer:0,
+   trap:`At \\(180^{\\circ}\\) the point is \\((-1,0)\\), so \\(\\cos180^{\\circ}=-1\\).`,
+   tip:`Quadrantal angle: read the coordinates on the unit circle.`},
+
+  // ================= SOLVING 0-360 =================
+  {topic:"Solving 0°–360°", q:`Solve \\(\\sin\\theta=\\tfrac12\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=30^{\\circ},\\ 150^{\\circ}\\)`,`\\(\\theta=30^{\\circ},\\ 330^{\\circ}\\)`,`\\(\\theta=60^{\\circ},\\ 120^{\\circ}\\)`,`\\(\\theta=30^{\\circ}\\)`], answer:0,
+   trap:`Sine is positive in QI and QII: reference \\(30^{\\circ}\\) gives \\(30^{\\circ}\\) and \\(150^{\\circ}\\).`,
+   tip:`Positive sine → QI and QII.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(\\cos\\theta=-\\tfrac12\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=120^{\\circ},\\ 240^{\\circ}\\)`,`\\(\\theta=60^{\\circ},\\ 300^{\\circ}\\)`,`\\(\\theta=120^{\\circ},\\ 300^{\\circ}\\)`,`\\(\\theta=60^{\\circ},\\ 120^{\\circ}\\)`], answer:0,
+   trap:`Cosine negative in QII and QIII: reference \\(60^{\\circ}\\) gives \\(120^{\\circ}\\) and \\(240^{\\circ}\\).`,
+   tip:`Negative cosine → QII and QIII.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(\\tan\\theta=1\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=45^{\\circ},\\ 225^{\\circ}\\)`,`\\(\\theta=45^{\\circ},\\ 135^{\\circ}\\)`,`\\(\\theta=135^{\\circ},\\ 315^{\\circ}\\)`,`\\(\\theta=45^{\\circ}\\)`], answer:0,
+   trap:`Tangent positive in QI and QIII: reference \\(45^{\\circ}\\) gives \\(45^{\\circ}\\) and \\(225^{\\circ}\\).`,
+   tip:`Positive tangent → QI and QIII.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(\\sin\\theta=-\\tfrac{\\sqrt3}{2}\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=240^{\\circ},\\ 300^{\\circ}\\)`,`\\(\\theta=60^{\\circ},\\ 120^{\\circ}\\)`,`\\(\\theta=210^{\\circ},\\ 330^{\\circ}\\)`,`\\(\\theta=120^{\\circ},\\ 240^{\\circ}\\)`], answer:0,
+   trap:`Sine negative in QIII and QIV: reference \\(60^{\\circ}\\) gives \\(240^{\\circ}\\) and \\(300^{\\circ}\\).`,
+   tip:`Negative sine → QIII and QIV.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(\\cos\\theta=\\tfrac{\\sqrt2}{2}\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=45^{\\circ},\\ 315^{\\circ}\\)`,`\\(\\theta=45^{\\circ},\\ 135^{\\circ}\\)`,`\\(\\theta=135^{\\circ},\\ 225^{\\circ}\\)`,`\\(\\theta=45^{\\circ}\\)`], answer:0,
+   trap:`Cosine positive in QI and QIV: reference \\(45^{\\circ}\\) gives \\(45^{\\circ}\\) and \\(315^{\\circ}\\).`,
+   tip:`Positive cosine → QI and QIV.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(2\\sin\\theta-1=0\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=30^{\\circ},\\ 150^{\\circ}\\)`,`\\(\\theta=60^{\\circ},\\ 120^{\\circ}\\)`,`\\(\\theta=30^{\\circ},\\ 330^{\\circ}\\)`,`\\(\\theta=45^{\\circ},\\ 135^{\\circ}\\)`], answer:0,
+   trap:`Isolate first: \\(\\sin\\theta=\\tfrac12\\Rightarrow\\theta=30^{\\circ},150^{\\circ}\\).`,
+   tip:`Isolate the trig ratio before finding angles.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(\\tan\\theta=-\\sqrt3\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=120^{\\circ},\\ 300^{\\circ}\\)`,`\\(\\theta=60^{\\circ},\\ 240^{\\circ}\\)`,`\\(\\theta=150^{\\circ},\\ 330^{\\circ}\\)`,`\\(\\theta=60^{\\circ},\\ 120^{\\circ}\\)`], answer:0,
+   trap:`Reference \\(60^{\\circ}\\) (since \\(\\tan60^{\\circ}=\\sqrt3\\)); tangent negative in QII and QIV → \\(120^{\\circ},300^{\\circ}\\).`,
+   tip:`Negative tangent → QII and QIV.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(\\cos\\theta=1\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=0^{\\circ}\\)`,`\\(\\theta=90^{\\circ}\\)`,`\\(\\theta=180^{\\circ}\\)`,`\\(\\theta=0^{\\circ},\\ 360^{\\circ}\\)`], answer:0,
+   trap:`\\(\\cos\\theta=1\\) only at \\(\\theta=0^{\\circ}\\); \\(360^{\\circ}\\) is outside the interval.`,
+   tip:`Quadrantal solution on the positive \\(x\\)-axis.`},
+
+  {topic:"Solving 0°–360°", q:`Solve \\(\\sin\\theta=1\\) for \\(0^{\\circ}\\le\\theta<360^{\\circ}\\).`,
+   options:[`\\(\\theta=90^{\\circ}\\)`,`\\(\\theta=0^{\\circ}\\)`,`\\(\\theta=270^{\\circ}\\)`,`\\(\\theta=90^{\\circ},\\ 270^{\\circ}\\)`], answer:0,
+   trap:`Sine reaches its maximum \\(1\\) only at \\(\\theta=90^{\\circ}\\).`,
+   tip:`\\(\\sin\\theta=1\\) at the top of the unit circle.`},
+
+  // ================= SINE LAW =================
+  {topic:"Sine Law", q:`The sine law states:`,
+   options:[`\\(\\dfrac{a}{\\sin A}=\\dfrac{b}{\\sin B}=\\dfrac{c}{\\sin C}\\)`,`\\(a^{2}=b^{2}+c^{2}-2bc\\cos A\\)`,`\\(\\dfrac{\\sin A}{\\sin B}=\\dfrac{b}{a}\\)`,`\\(a\\sin A=b\\sin B\\)`], answer:0,
+   trap:`Each side is proportional to the sine of its opposite angle.`,
+   tip:`Side over sine of the opposite angle is constant.`},
+
+  {topic:"Sine Law", q:`In \\(\\triangle ABC\\), \\(A=40^{\\circ}\\), \\(a=10\\), \\(B=60^{\\circ}\\). Find \\(b\\).`,
+   options:[`\\(\\approx 13.5\\)`,`\\(\\approx 7.4\\)`,`\\(\\approx 15.0\\)`,`\\(\\approx 11.6\\)`], answer:0,
+   trap:`\\(b=\\dfrac{a\\sin B}{\\sin A}=\\dfrac{10\\sin60^{\\circ}}{\\sin40^{\\circ}}\\approx13.5\\).`,
+   tip:`Pair each side with its opposite angle.`},
+
+  {topic:"Sine Law", q:`In \\(\\triangle ABC\\), \\(A=45^{\\circ}\\), \\(a=8\\), \\(B=60^{\\circ}\\). Find \\(b\\).`,
+   options:[`\\(\\approx 9.8\\)`,`\\(\\approx 6.5\\)`,`\\(\\approx 11.3\\)`,`\\(\\approx 8.0\\)`], answer:0,
+   trap:`\\(b=\\dfrac{8\\sin60^{\\circ}}{\\sin45^{\\circ}}\\approx9.8\\).`,
+   tip:`\\(\\sin60^{\\circ}>\\sin45^{\\circ}\\), so \\(b>a\\).`},
+
+  {topic:"Sine Law", q:`In \\(\\triangle ABC\\), \\(a=12\\), \\(A=50^{\\circ}\\), \\(b=10\\). Find \\(B\\).`,
+   options:[`\\(\\approx 40^{\\circ}\\)`,`\\(\\approx 50^{\\circ}\\)`,`\\(\\approx 60^{\\circ}\\)`,`\\(\\approx 25^{\\circ}\\)`], answer:0,
+   trap:`\\(\\sin B=\\dfrac{10\\sin50^{\\circ}}{12}\\approx0.638\\Rightarrow B\\approx40^{\\circ}\\).`,
+   tip:`Solve for \\(\\sin B\\) first, then take the inverse.`},
+
+  {topic:"Sine Law", q:`In \\(\\triangle ABC\\), \\(a=15\\), \\(A=40^{\\circ}\\), \\(C=75^{\\circ}\\). Find \\(b\\).`,
+   options:[`\\(\\approx 21.1\\)`,`\\(\\approx 18.0\\)`,`\\(\\approx 15.0\\)`,`\\(\\approx 23.3\\)`], answer:0,
+   trap:`\\(B=180^{\\circ}-40^{\\circ}-75^{\\circ}=65^{\\circ}\\); \\(b=\\dfrac{15\\sin65^{\\circ}}{\\sin40^{\\circ}}\\approx21.1\\).`,
+   tip:`Find the third angle first with the angle sum.`},
+
+  {topic:"Sine Law", q:`The sine law is the tool of choice when you know:`,
+   options:[`an angle and its opposite side`,`three sides only`,`two sides and the included angle`,`the two shorter sides`], answer:0,
+   trap:`Sine law needs a complete side–opposite-angle pair.`,
+   tip:`Cosine law handles SSS and SAS; sine law handles the rest.`},
+
+  // ================= COSINE LAW =================
+  {topic:"Cosine Law", q:`The cosine law states:`,
+   options:[`\\(c^{2}=a^{2}+b^{2}-2ab\\cos C\\)`,`\\(c^{2}=a^{2}+b^{2}+2ab\\cos C\\)`,`\\(c=a+b-2ab\\cos C\\)`,`\\(\\dfrac{c}{\\sin C}=\\dfrac{a}{\\sin A}\\)`], answer:0,
+   trap:`It is \\(a^{2}+b^{2}\\) minus \\(2ab\\cos C\\), where \\(C\\) is opposite \\(c\\).`,
+   tip:`A Pythagorean-like law with a \\(-2ab\\cos C\\) correction.`},
+
+  {topic:"Cosine Law", q:`In \\(\\triangle ABC\\), \\(a=5\\), \\(b=7\\), \\(C=60^{\\circ}\\). Find \\(c\\).`,
+   options:[`\\(\\approx 6.2\\)`,`\\(\\approx 8.6\\)`,`\\(\\approx 5.0\\)`,`\\(\\approx 12\\)`], answer:0,
+   trap:`\\(c^{2}=25+49-2(5)(7)\\cos60^{\\circ}=74-35=39\\Rightarrow c\\approx6.2\\).`,
+   tip:`\\(\\cos60^{\\circ}=\\tfrac12\\), so the correction is \\(35\\).`},
+
+  {topic:"Cosine Law", q:`In \\(\\triangle ABC\\), \\(a=4\\), \\(b=5\\), \\(c=6\\). Find angle \\(C\\).`,
+   options:[`\\(\\approx 82.8^{\\circ}\\)`,`\\(\\approx 60^{\\circ}\\)`,`\\(\\approx 97.2^{\\circ}\\)`,`\\(\\approx 41.4^{\\circ}\\)`], answer:0,
+   trap:`\\(\\cos C=\\dfrac{16+25-36}{2(4)(5)}=\\dfrac{5}{40}=0.125\\Rightarrow C\\approx82.8^{\\circ}\\).`,
+   tip:`Rearrange the cosine law to \\(\\cos C=\\dfrac{a^{2}+b^{2}-c^{2}}{2ab}\\).`},
+
+  {topic:"Cosine Law", q:`Find the largest angle of a triangle with sides \\(3\\), \\(5\\), \\(7\\).`,
+   options:[`\\(120^{\\circ}\\)`,`\\(90^{\\circ}\\)`,`\\(60^{\\circ}\\)`,`\\(150^{\\circ}\\)`], answer:0,
+   trap:`The largest angle faces the side \\(7\\): \\(\\cos\\theta=\\dfrac{9+25-49}{30}=-0.5\\Rightarrow\\theta=120^{\\circ}\\).`,
+   tip:`The largest angle is opposite the longest side.`},
+
+  {topic:"Cosine Law", q:`In \\(\\triangle ABC\\), \\(b=10\\), \\(c=12\\), \\(A=45^{\\circ}\\). Find \\(a\\).`,
+   options:[`\\(\\approx 8.6\\)`,`\\(\\approx 15.6\\)`,`\\(\\approx 11.0\\)`,`\\(\\approx 6.2\\)`], answer:0,
+   trap:`\\(a^{2}=100+144-2(10)(12)\\cos45^{\\circ}\\approx74.3\\Rightarrow a\\approx8.6\\).`,
+   tip:`Use the sides and their included angle \\(A\\).`},
+
+  {topic:"Cosine Law", q:`Use the cosine law when you are given:`,
+   options:[`two sides and the included angle`,`an angle and its opposite side`,`three angles`,`one side and one angle`], answer:0,
+   trap:`Cosine law handles SAS (and SSS); sine law needs a side–opposite-angle pair.`,
+   tip:`SAS or SSS → cosine law.`},
+
+  {topic:"Cosine Law", q:`In \\(\\triangle ABC\\), \\(a=8\\), \\(b=6\\), \\(C=90^{\\circ}\\). Find \\(c\\).`,
+   options:[`\\(10\\)`,`\\(14\\)`,`\\(\\approx 11.7\\)`,`\\(\\approx 7.2\\)`], answer:0,
+   trap:`\\(\\cos90^{\\circ}=0\\), so the cosine law reduces to \\(c^{2}=64+36=100\\Rightarrow c=10\\).`,
+   tip:`At \\(90^{\\circ}\\) the cosine law becomes the Pythagorean theorem.`},
+
+  // ================= AMBIGUOUS CASE =================
+  {topic:"Ambiguous Case", q:`In the ambiguous (SSA) case, the number of possible triangles is:`,
+   options:[`\\(0\\), \\(1\\), or \\(2\\)`,`always \\(1\\)`,`always \\(2\\)`,`\\(1\\) or \\(3\\)`], answer:0,
+   trap:`Depending on the height \\(h=b\\sin A\\), SSA can give no triangle, one, or two.`,
+   tip:`Compare \\(a\\) with \\(h\\) and \\(b\\).`},
+
+  {topic:"Ambiguous Case", q:`Given \\(A=30^{\\circ}\\), \\(a=5\\), \\(b=8\\) (so \\(h=b\\sin A=4\\)). How many triangles?`,
+   options:[`two`,`one`,`none`,`three`], answer:0,
+   trap:`Since \\(h=4<a=5<b=8\\), the side \\(a\\) can close in two ways → two triangles.`,
+   tip:`\\(h<a<b\\) (with \\(A\\) acute) → two triangles.`},
+
+  {topic:"Ambiguous Case", q:`Given \\(A=30^{\\circ}\\), \\(a=3\\), \\(b=8\\) (so \\(h=4\\)). How many triangles?`,
+   options:[`none`,`one`,`two`,`infinitely many`], answer:0,
+   trap:`\\(a=3<h=4\\): the side is too short to reach the base, so no triangle forms.`,
+   tip:`\\(a<h\\) → no triangle.`},
+
+  {topic:"Ambiguous Case", q:`Given \\(A=30^{\\circ}\\), \\(a=4\\), \\(b=8\\) (so \\(h=4\\)). How many triangles?`,
+   options:[`one (right triangle)`,`two`,`none`,`three`], answer:0,
+   trap:`\\(a=h=4\\): the side just reaches the base perpendicularly → exactly one right triangle.`,
+   tip:`\\(a=h\\) → one right triangle.`},
+
+  {topic:"Ambiguous Case", q:`In an SSA situation with \\(A\\) acute and \\(a\\ge b\\), the number of triangles is:`,
+   options:[`exactly one`,`zero`,`exactly two`,`three`], answer:0,
+   trap:`When \\(a\\ge b\\), the longer side forces a single triangle.`,
+   tip:`\\(a\\ge b\\) → one triangle.`},
+
+  {topic:"Ambiguous Case", q:`The ambiguous case arises when you are given:`,
+   options:[`two sides and a non-included angle`,`two sides and the included angle`,`three sides`,`two angles and a side`], answer:0,
+   trap:`SSA (a non-included angle) is the configuration that can yield more than one triangle.`,
+   tip:`\\"Non-included angle\\" is the giveaway for the ambiguous case.`}
+];
+
+/* =========================================================================
+   QUIZ ENGINE — random draw + option shuffle + confirm-to-lock
+   ========================================================================= */
+const LETTERS = ["A","B","C","D"];
+const TOPIC_ORDER = ["Standard Position","Exact Ratios","Solving 0°–360°","Sine Law","Cosine Law","Ambiguous Case"];
+const QUIZ_SIZE = 50;
+
+let state = null;
+const app = document.getElementById("app");
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); const t=a[i]; a[i]=a[j]; a[j]=t; }
+  return a;
+}
+
+function buildDeck(){
+  const pick = shuffle(QUESTIONS).slice(0, Math.min(QUIZ_SIZE, QUESTIONS.length));
+  return pick.map(q=>{
+    const order = shuffle(q.options.map((_,k)=>k));   // random permutation of option positions
+    const options = order.map(k=>q.options[k]);
+    const answer = order.indexOf(q.answer);
+    return { topic:q.topic, q:q.q, options, answer, trap:q.trap, tip:q.tip };
+  });
+}
+
+function renderMath(el){
+  if(window.renderMathInElement){
+    renderMathInElement(el,{delimiters:[{left:"\\(",right:"\\)",display:false}],throwOnError:false});
+  }
+}
+
+function startScreen(){
+  const counts = {};
+  TOPIC_ORDER.forEach(t=>counts[t]=0);
+  QUESTIONS.forEach(q=>counts[q.topic]++);
+  const runCount = loadRuns().length;
+  const sub = document.getElementById("subline");
+  if(sub) sub.textContent = QUIZ_SIZE + " harder randomized questions each attempt · drawn from a bank of " + QUESTIONS.length;
+  app.innerHTML = `
+    <div class="card anim">
+      <p class="lede">A fresh, shuffled set of <b>${QUIZ_SIZE}</b> harder questions is drawn from a bank of <b>${QUESTIONS.length}</b> every time you begin, and the answer choices are re-ordered too — so retaking never gives the same paper twice. Pick an option, then press <b>Confirm</b> to lock it in and see the correct answer, the common trap, and a tip.</p>
+      <ul class="topics">
+        ${TOPIC_ORDER.map(t=>`<li><span>${t}</span><span>${counts[t]} in bank</span></li>`).join("")}
+      </ul>
+      <div class="note"><b>How to use it:</b>&nbsp;These are multi-step, exam-plus questions. Read the trap on every one — those are the exact slips that cost marks. Retake as many times as you like to drill.</div>
+      <div class="btn-row"><button class="btn" onclick="begin()">Begin test</button></div>
+      <div class="btn-row"><button class="btn ghost" onclick="recordsScreen()">${runCount ? `View records (${runCount})` : "Records"}</button></div>
+    </div>`;
+}
+
+function begin(){
+  const deck = buildDeck();
+  state = { i:0, deck, chosen:new Array(deck.length).fill(null), selected:new Array(deck.length).fill(null), score:0 };
+  renderQuestion();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderQuestion(){
+  const idx = state.i, q = state.deck[idx], picked = state.chosen[idx];
+  const skipped = picked === "skip";
+  const answered = picked !== null && !skipped;
+  const done = picked !== null;
+  const pct = ((idx + (done?1:0)) / state.deck.length) * 100;
+
+  app.innerHTML = `
+    <div class="topbar">
+      <div class="counter"><span class="qn">${idx+1}</span> / ${state.deck.length}</div>
+      <div class="score-chip">Score ${state.score}</div>
+    </div>
+    <div class="track"><div class="fill" style="width:${pct}%"></div></div>
+    <div class="card anim">
+      <span class="tag">${q.topic}</span>
+      <p class="question">${q.q}</p>
+      <div class="options" id="opts">
+        ${q.options.map((o,k)=>`
+          <button class="opt" data-k="${k}" onclick="choose(${k})">
+            <span class="letter">${LETTERS[k]}</span><span>${o}</span>
+          </button>`).join("")}
+      </div>
+      <div id="confirmRow"></div>
+      <div id="fb"></div>
+      <div id="nav"></div>
+    </div>`;
+  renderMath(app);
+
+  if(skipped){
+    showSkipped(idx, false);
+  }else if(answered){
+    showFeedback(idx, picked, false);
+  }else{
+    const confirmBtn = `<button class="btn" id="confirmBtn" disabled onclick="confirmAnswer()">Confirm answer</button>`;
+    document.getElementById("confirmRow").innerHTML =
+      `<div class="confirm-hint">Select an answer, then confirm — or skip if it's too easy.</div>` +
+      (idx>0
+        ? `<div class="btn-row two"><button class="btn ghost" onclick="prev()">Previous</button>${confirmBtn}</div>`
+        : `<div class="btn-row">${confirmBtn}</div>`) +
+      `<div class="btn-row"><button class="btn subtle" onclick="skipQuestion()">Skip — too easy (doesn't count)</button></div>`;
+    // restore a tentative pick if the user left this question and came back
+    const sel = state.selected[idx];
+    if(sel !== null && sel !== undefined){
+      document.querySelectorAll("#opts .opt").forEach(btn=>btn.classList.toggle("selected", +btn.dataset.k === sel));
+      const cb = document.getElementById("confirmBtn"); if(cb) cb.disabled = false;
+    }
+  }
+}
+
+function choose(k){
+  const idx = state.i;
+  if(state.chosen[idx] !== null) return;         // already locked
+  state.selected[idx] = k;
+  document.querySelectorAll("#opts .opt").forEach(btn=>{
+    btn.classList.toggle("selected", +btn.dataset.k === k);
+  });
+  const cb = document.getElementById("confirmBtn");
+  if(cb) cb.disabled = false;
+}
+
+function confirmAnswer(){
+  const idx = state.i;
+  if(state.chosen[idx] !== null) return;
+  const k = state.selected[idx];
+  if(k === null || k === undefined) return;
+  state.chosen[idx] = k;
+  if(k === state.deck[idx].answer) state.score++;
+  showFeedback(idx, k, true);
+}
+
+function skipQuestion(){
+  const idx = state.i;
+  if(state.chosen[idx] !== null) return;   // can't skip an already-locked question
+  state.chosen[idx] = "skip";              // sentinel: not scored, not counted
+  showSkipped(idx, true);
+}
+
+function showSkipped(idx, animateBar){
+  const q = state.deck[idx];
+  const correct = q.answer;
+  document.querySelectorAll("#opts .opt").forEach(btn=>{
+    const bk = +btn.dataset.k;
+    btn.disabled = true;
+    btn.classList.remove("selected");
+    if(bk === correct) btn.classList.add("correct");
+  });
+  const cr = document.getElementById("confirmRow"); if(cr) cr.innerHTML = "";
+  if(animateBar){
+    const pct = ((idx+1)/state.deck.length)*100;
+    const fill = document.querySelector(".fill"); if(fill) fill.style.width = pct+"%";
+  }
+  document.getElementById("fb").innerHTML = `
+    <div class="feedback skip">
+      <div class="verdict">Skipped · not counted</div>
+      <div class="explain">The answer is <strong>${LETTERS[correct]}</strong> &nbsp;${q.options[correct]}</div>
+      <div class="flag tip"><span class="lbl">Tip</span>${q.tip}</div>
+    </div>`;
+  const last = idx === state.deck.length-1;
+  const nextLabel = last ? "See results" : "Next question";
+  document.getElementById("nav").innerHTML = (idx>0)
+    ? `<div class="btn-row two"><button class="btn ghost" onclick="prev()">Previous</button><button class="btn" onclick="next()">${nextLabel}</button></div>`
+    : `<div class="btn-row"><button class="btn" onclick="next()">${nextLabel}</button></div>`;
+  renderMath(document.getElementById("fb"));
+}
+
+function showFeedback(idx, k, animateBar){
+  const q = state.deck[idx];
+  const correct = q.answer;
+  const isRight = k === correct;
+
+  document.querySelectorAll("#opts .opt").forEach(btn=>{
+    const bk = +btn.dataset.k;
+    btn.disabled = true;
+    btn.classList.remove("selected");
+    if(bk === correct) btn.classList.add("correct");
+    else if(bk === k) btn.classList.add("wrong");
+  });
+
+  const cr = document.getElementById("confirmRow");
+  if(cr) cr.innerHTML = "";
+
+  if(animateBar){
+    const pct = ((idx+1)/state.deck.length)*100;
+    const fill = document.querySelector(".fill"); if(fill) fill.style.width = pct+"%";
+    const chip = document.querySelector(".score-chip"); if(chip) chip.textContent = "Score "+state.score;
+  }
+
+  document.getElementById("fb").innerHTML = `
+    <div class="feedback ${isRight?"ok":"no"}">
+      <div class="verdict">${isRight?"Correct":"Not quite"}</div>
+      <div class="explain">The answer is <strong>${LETTERS[correct]}</strong> &nbsp;${q.options[correct]}</div>
+      <div class="flag trap"><span class="lbl">Trap</span>${q.trap}</div>
+      <div class="flag tip"><span class="lbl">Tip</span>${q.tip}</div>
+    </div>`;
+
+  const last = idx === state.deck.length-1;
+  const nextLabel = last ? "See results" : "Next question";
+  document.getElementById("nav").innerHTML = (idx>0)
+    ? `<div class="btn-row two"><button class="btn ghost" onclick="prev()">Previous</button><button class="btn" onclick="next()">${nextLabel}</button></div>`
+    : `<div class="btn-row"><button class="btn" onclick="next()">${nextLabel}</button></div>`;
+  renderMath(document.getElementById("fb"));
+}
+
+function next(){
+  if(state.i === state.deck.length-1){ results(); return; }
+  state.i++; renderQuestion();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function prev(){
+  if(!state || state.i === 0) return;
+  state.i--; renderQuestion();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function results(){
+  // save this attempt to the records once (guard against re-entry via "Back to score")
+  const counted = state.chosen.filter(c=>c!=="skip" && c!=null).length;
+  const skippedN = state.chosen.filter(c=>c==="skip").length;
+
+  if(state && !state.saved){
+    const mistakes = [];
+    state.deck.forEach((q,i)=>{
+      const c = state.chosen[i];
+      if(c !== "skip" && c != null && c !== q.answer){
+        mistakes.push({ topic:q.topic, q:q.q, you:q.options[c], correct:q.options[q.answer] });
+      }
+    });
+    const bt = {}; TOPIC_ORDER.forEach(t=>bt[t]={c:0,n:0});
+    state.deck.forEach((q,i)=>{ if(state.chosen[i]!=="skip"){ bt[q.topic].n++; if(state.chosen[i]===q.answer) bt[q.topic].c++; } });
+    saveRun({ ts:Date.now(), score:state.score, total:counted, skipped:skippedN,
+              pct: counted>0 ? Math.round(state.score/counted*100) : 0, byTopic:bt, mistakes });
+    state.saved = true;
+  }
+
+  const total = counted;
+  const pct = total>0 ? Math.round((state.score/total)*100) : 0;
+  const byTopic = {};
+  TOPIC_ORDER.forEach(t=>byTopic[t]={c:0,n:0});
+  state.deck.forEach((q,i)=>{ if(state.chosen[i]!=="skip"){ byTopic[q.topic].n++; if(state.chosen[i]===q.answer) byTopic[q.topic].c++; } });
+
+  let msg;
+  if(pct>=90) msg="Excellent — these skills are exam-ready.";
+  else if(pct>=75) msg="Solid work. Review the traps you hit and you're there.";
+  else if(pct>=60) msg="Good foundation. The breakdown below shows what to drill next.";
+  else msg="Worth another pass — focus on the lowest bars first, then retake.";
+
+  app.innerHTML = `
+    <div class="card anim">
+      <div class="score-big">${state.score}<small>/${total}</small></div>
+      <div class="pct">${pct}%</div>
+      <div class="verdict-line">${msg}${skippedN?` · ${skippedN} skipped (not counted)`:""}</div>
+      <div class="breakdown">
+        ${TOPIC_ORDER.map(t=>{
+          const b=byTopic[t]; if(b.n===0) return "";
+          const p=Math.round((b.c/b.n)*100);
+          return `<div class="brow">
+            <span class="name">${t}</span>
+            <span class="bar"><i style="width:${p}%"></i></span>
+            <span class="frac">${b.c}/${b.n}</span>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="shareScreen()">Share mistakes with Claude</button>
+      </div>
+      <div class="btn-row two">
+        <button class="btn ghost" onclick="review()">Review answers</button>
+        <button class="btn ghost" onclick="begin()">Retake (new set)</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn ghost" onclick="recordsScreen()">View records</button>
+      </div>
+    </div>`;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+// Convert the LaTeX in a question/option into readable plain text for sharing
+function toPlain(s){
+  let t = s;
+  const sup = {"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+  t = t.replace(/\^\{(\d+)\}/g, (m,d)=>d.split("").map(c=>sup[c]||c).join(""));
+  t = t.replace(/\^(\d)/g, (m,d)=>sup[d]||("^"+d));
+  const idx = {"3":"³","4":"⁴","5":"⁵","6":"⁶","12":"¹²"};
+  for(let p=0;p<5;p++){
+    t = t.replace(/\\sqrt\[(\d+)\]\{([^{}]*)\}/g, (m,k,x)=> (idx[k]||("["+k+"]"))+"√("+x+")");
+    t = t.replace(/\\sqrt\{([^{}]*)\}/g, (m,x)=>"√("+x+")");
+    t = t.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, (m,a,b)=>a+"/"+b);
+  }
+  t = t.replace(/\\ge/g,"≥").replace(/\\le/g,"≤").replace(/\\ne/g,"≠")
+       .replace(/\\pm/g,"±").replace(/\\cdot/g,"·").replace(/\\times/g,"×").replace(/\\div/g,"÷")
+       .replace(/\\Rightarrow/g,"⇒").replace(/\\pi/g,"π");
+  t = t.replace(/\\[,;! ]/g," ").replace(/\\\(/g,"").replace(/\\\)/g,"");
+  t = t.replace(/\\left|\\right/g,"").replace(/[{}]/g,"");
+  t = t.replace(/\s+/g," ").replace(/\s+([.,;:)])/g,"$1").replace(/\(\s+/g,"(").trim();
+  return t;
+}
+
+function buildReport(){
+  const counted = state.chosen.filter(c=>c!=="skip" && c!=null).length;
+  const skippedN = state.chosen.filter(c=>c==="skip").length;
+  const total = counted;
+  const pct = total>0 ? Math.round((state.score/total)*100) : 0;
+  const missed = [];
+  state.deck.forEach((q,i)=>{ const c=state.chosen[i]; if(c!=="skip" && c!=null && c!==q.answer) missed.push(i); });
+
+  const byTopic = {};
+  TOPIC_ORDER.forEach(t=>byTopic[t]={c:0,n:0});
+  state.deck.forEach((q,i)=>{ if(state.chosen[i]!=="skip"){ byTopic[q.topic].n++; if(state.chosen[i]===q.answer) byTopic[q.topic].c++; } });
+
+  let out = "TRIGONOMETRY — CHALLENGE TEST RESULTS\n";
+  out += "Pre-Calculus 11 · Chapter 2\n";
+  out += "Score: " + state.score + "/" + total + " (" + pct + "%)" + (skippedN? "  ·  "+skippedN+" skipped" : "") + "\n\n";
+
+  out += "BY TOPIC:\n";
+  TOPIC_ORDER.forEach(t=>{ if(byTopic[t].n>0) out += "- " + t + ": " + byTopic[t].c + "/" + byTopic[t].n + "\n"; });
+
+  if(missed.length===0){
+    out += "\nNo mistakes — I got every question right. Give me even harder practice.\n";
+    return out;
+  }
+
+  out += "\nMISTAKES (" + missed.length + "):\n";
+  missed.forEach(i=>{
+    const q = state.deck[i], you = state.chosen[i];
+    out += "\n[" + q.topic + "]\n";
+    out += "Question: " + toPlain(q.q) + "\n";
+    out += "My answer: " + LETTERS[you] + ") " + toPlain(q.options[you]) + "\n";
+    out += "Correct:   " + LETTERS[q.answer] + ") " + toPlain(q.options[q.answer]) + "\n";
+  });
+  out += "\nPlease look at the pattern in these mistakes and help me stop making them.";
+  return out;
+}
+
+function shareScreen(){
+  const report = buildReport();
+  const missedCount = state.chosen.filter((c,i)=>c!=="skip" && c!=null && c!==state.deck[i].answer).length;
+  app.innerHTML = `
+    <div class="card anim">
+      <div class="kicker" style="margin-bottom:6px">Share with Claude</div>
+      <p class="lede">${missedCount===0
+        ? "Perfect score — copy this so Claude can give you tougher questions."
+        : "Copy the summary below and paste it into your chat with Claude. It lists every question you missed, what you chose, and the correct answer."}</p>
+      <textarea id="report" class="report" readonly>${report.replace(/</g,"&lt;")}</textarea>
+      <div class="btn-row">
+        <button class="btn" id="copyBtn" onclick="copyReport()">Copy summary</button>
+      </div>
+      <div class="btn-row two">
+        <button class="btn ghost" onclick="results()">Back to score</button>
+        <button class="btn ghost" onclick="review()">Review answers</button>
+      </div>
+    </div>`;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function copyReport(){
+  const ta = document.getElementById("report");
+  if(!ta) return;
+  ta.focus(); ta.select();
+  try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+  try{ document.execCommand("copy"); }catch(e){}
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(()=>{},()=>{});
+  }
+  const b = document.getElementById("copyBtn");
+  if(b){
+    const prev = b.textContent;
+    b.textContent = "Copied — now paste it into the chat";
+    setTimeout(()=>{ b.textContent = prev; }, 2400);
+  }
+}
+
+function review(){
+  const rows = state.deck.map((q,i)=>{
+    const you = state.chosen[i];
+    const right = q.answer;
+    const isSkip = you === "skip";
+    const gotIt = !isSkip && you === right;
+    const yourLine = isSkip
+      ? `<div class="rev-a" style="background:var(--paper);color:var(--muted)"><span class="mk">–</span><span>Skipped (not counted)</span></div>`
+      : (you!==null && !gotIt)
+        ? `<div class="rev-a you-wrong"><span class="mk">${LETTERS[you]}</span><span>Your answer: ${q.options[you]}</span></div>` : "";
+    return `<div class="rev-item">
+      <div class="rev-q"><span class="qnum">Q${i+1}</span>${q.q}</div>
+      ${yourLine}
+      <div class="rev-a correct"><span class="mk">${LETTERS[right]}</span><span>${gotIt?"Correct — ":""}${q.options[right]}</span></div>
+      <div class="rev-flags">
+        <div class="flag trap"><span class="lbl">Trap</span>${q.trap}</div>
+        <div class="flag tip"><span class="lbl">Tip</span>${q.tip}</div>
+      </div>
+    </div>`;
+  }).join("");
+  app.innerHTML = `<div class="anim">${rows}
+    <div class="btn-row two">
+      <button class="btn ghost" onclick="results()">Back to score</button>
+      <button class="btn" onclick="begin()">Retake (new set)</button>
+    </div></div>`;
+  renderMath(app);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* =========================================================================
+   RECORDS — persist runs to this browser's local storage (works on the file
+   you open locally). Stores score, per-topic breakdown, and every mistake.
+   ========================================================================= */
+const STORE_KEY = "pc11_trig_records_v1";
+
+function storageOK(){
+  try{ const k="__pc11_test"; localStorage.setItem(k,"1"); localStorage.removeItem(k); return true; }
+  catch(e){ return false; }
+}
+function loadRuns(){
+  try{ const raw = localStorage.getItem(STORE_KEY); const a = raw ? JSON.parse(raw) : []; return Array.isArray(a)?a:[]; }
+  catch(e){ return []; }
+}
+function saveRun(rec){
+  try{ const a = loadRuns(); a.push(rec); while(a.length>100) a.shift(); localStorage.setItem(STORE_KEY, JSON.stringify(a)); return true; }
+  catch(e){ return false; }
+}
+function clearRuns(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} recordsScreen(); }
+
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})
+       + " · " + d.toLocaleTimeString(undefined,{hour:"numeric",minute:"2-digit"});
+}
+
+function missHTML(m){
+  return `<div class="miss">
+    <div class="mtop">${m.topic}</div>
+    <div>${m.q}</div>
+    <div class="ml bad"><b>You:</b><span>${m.you}</span></div>
+    <div class="ml good"><b>Correct:</b><span>${m.correct}</span></div>
+  </div>`;
+}
+
+function recordsScreen(){
+  const runs = loadRuns();
+
+  if(runs.length === 0){
+    app.innerHTML = `
+      <div class="card anim">
+        <div class="kicker" style="margin-bottom:8px">Your records</div>
+        <p class="lede">${storageOK()
+          ? "No attempts saved yet. Finish a test and your score, topic breakdown, and every mistake will appear here automatically — saved in this browser on this computer."
+          : "This browser is blocking local storage (often private/incognito mode), so attempts can't be saved on this device. Try opening the file in a normal window."}</p>
+        <div class="btn-row"><button class="btn" onclick="startScreen()">Back to start</button></div>
+      </div>`;
+    window.scrollTo({top:0,behavior:"smooth"});
+    return;
+  }
+
+  const list  = runs.slice().reverse();                 // newest first
+  const pcts  = runs.map(r=>r.pct);
+  const best  = Math.max(...pcts);
+  const avg   = Math.round(pcts.reduce((a,b)=>a+b,0)/pcts.length);
+  const lastP = list[0].pct;
+  const recent = runs.slice(-14);
+  const maxBar = Math.max(100, ...recent.map(r=>r.pct));
+
+  // aggregate most-missed questions across all runs (keyed by question text)
+  const agg = {};
+  runs.forEach(r=> (r.mistakes||[]).forEach(m=>{
+    if(!agg[m.q]) agg[m.q] = {count:0, topic:m.topic, q:m.q, correct:m.correct};
+    agg[m.q].count++;
+  }));
+  const top = Object.values(agg).sort((a,b)=>b.count-a.count).slice(0,10);
+
+  app.innerHTML = `
+    <div class="anim">
+    <div class="card">
+      <div class="kicker" style="margin-bottom:10px">Your records</div>
+
+      <div class="stat-grid">
+        <div class="stat"><div class="v">${runs.length}</div><div class="k">Attempts</div></div>
+        <div class="stat"><div class="v">${best}%</div><div class="k">Best</div></div>
+        <div class="stat"><div class="v">${avg}%</div><div class="k">Average</div></div>
+        <div class="stat"><div class="v">${lastP}%</div><div class="k">Last</div></div>
+      </div>
+
+      <div class="spark">
+        ${recent.map(r=>`<div class="b" style="height:${Math.max(3,Math.round(r.pct/maxBar*100))}%"><span>${r.pct}</span></div>`).join("")}
+      </div>
+      <div class="spark-cap">Last ${recent.length} attempt${recent.length>1?"s":""} (% score)</div>
+
+      <div class="sec-h">Attempts</div>
+      ${list.map(r=>`
+        <details class="run">
+          <summary>
+            <span class="rdate">${fmtDate(r.ts)}${r.skipped?` · ${r.skipped} skipped`:""}</span>
+            <span class="score-chip">${r.score}/${r.total} · ${r.pct}%</span>
+          </summary>
+          ${ (r.mistakes && r.mistakes.length)
+             ? `<div class="rbody">${r.mistakes.map(missHTML).join("")}</div>`
+             : `<div class="rnone">Perfect run — no mistakes. 🎯</div>` }
+        </details>`).join("")}
+
+      ${ top.length ? `<div class="sec-h">Most-missed questions</div>
+        ${top.map(a=>`<div class="miss">
+          <div class="mtop">${a.topic} &nbsp;·&nbsp; missed ${a.count}×</div>
+          <div>${a.q}</div>
+          <div class="ml good"><b>Correct:</b><span>${a.correct}</span></div>
+        </div>`).join("")}` : "" }
+
+      <div class="btn-row two">
+        <button class="btn ghost" onclick="if(confirm('Delete all saved attempts? This cannot be undone.')) clearRuns();">Clear all records</button>
+        <button class="btn" onclick="startScreen()">Back to start</button>
+      </div>
+    </div></div>`;
+  renderMath(app);
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+window.addEventListener("DOMContentLoaded",()=>{
+  if(window.renderMathInElement){ startScreen(); }
+  else { window.addEventListener("load", startScreen); setTimeout(startScreen,400); }
+});
+</script>
+</body>
+</html>
