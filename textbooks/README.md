@@ -1,18 +1,25 @@
 # Textbooks
 
-Drop each course's textbook PDF in this folder using the exact filename below —
-the "📖 Textbook" buttons on the site link to these paths.
+The "📖 Textbook" buttons open a **hosted PDF link** in a new browser tab — the
+PDF is not stored in this repo (the Pre-Calc 11 book alone is ~23 MB, too big to
+commit and it would slow the site/push).
 
-| Course | Expected file |
-|--------|---------------|
-| Pre-Calculus 11 | `precalc11.pdf` |
-| Pre-Calculus 12 | `precalc12.pdf` |
-| Physics 11 | `physics11.pdf` |
-| Chemistry 11 | `chemistry11.pdf` |
+## How to set a course's textbook
+Edit that course's `.tb-btn` link and set its `href` to a direct PDF URL:
+- Home page cards → `index.html`
+- Pre-Calculus 11 units page → `precalc_11/index.html`
 
-Notes:
-- The buttons open the PDF in a new browser tab.
-- Until a file is added, its button will 404 — add the PDF with the matching
-  name and it starts working, no code changes needed.
-- To add a textbook for a new course, put its PDF here and point that course's
-  `.tb-btn` href at the new filename.
+Use a URL that ends in `.pdf` so it opens inline. For Google Drive, share the
+file "Anyone with the link" and use the direct form
+`https://drive.google.com/uc?export=view&id=FILE_ID`.
+
+## Current links
+| Course | Link |
+|--------|------|
+| Pre-Calculus 11 | ✅ set (hosted PDF) |
+| Pre-Calculus 12 | ⬜ placeholder — replace the href when you have a URL |
+| Physics 11 | ⬜ placeholder |
+| Chemistry 11 | ⬜ placeholder |
+
+(If you'd rather host a PDF yourself instead of linking out, you can still drop a
+file here and point the href at e.g. `textbooks/precalc12.pdf`.)
