@@ -1,3 +1,3 @@
-# A GITHUB PAGE FOR HAONI's CODING STUFF
+# A GITHUB PAGE FOR HAONI's WEBSITE
 
 im too lazy to write things here.
