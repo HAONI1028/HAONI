@@ -80,8 +80,23 @@
   .badge.ready{color:var(--brand);background:var(--brand-soft)}
   .badge.soon{color:var(--amber);background:var(--amber-soft)}
 
-  .course.soon{opacity:.7;cursor:default}
+  .course.soon{cursor:default}
+  .course.soon .emoji,.course.soon h2,.course.soon p{opacity:.6}
   .course.soon .meta{color:var(--muted)}
+
+  /* whole-card link (stretched) so the textbook button can sit above it */
+  .course-link{position:absolute;inset:0;z-index:1;border-radius:var(--radius)}
+  .tb-btn{
+    position:relative;z-index:2;align-self:flex-start;margin-top:16px;
+    display:inline-flex;align-items:center;gap:7px;
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
+    color:var(--brand);background:var(--brand-soft);
+    padding:8px 13px;border-radius:20px;text-decoration:none;
+    border:1px solid transparent;
+    transition:background .15s ease, border-color .15s ease, transform .08s ease;
+  }
+  .tb-btn:hover{background:#fff;border-color:var(--brand)}
+  .tb-btn:active{transform:translateY(1px)}
 
   .foot{margin-top:40px;font-size:13px;color:var(--muted);text-align:center}
 </style>
@@ -96,13 +111,15 @@
 
   <div class="grid">
 
-    <a class="course live" href="precalc_11/index.html">
+    <div class="course live">
+      <a class="course-link" href="precalc_11/index.html" aria-label="Open Pre-Calculus 11"></a>
       <span class="badge ready">Ready</span>
       <div class="emoji">📐</div>
       <h2>Pre-Calculus 11</h2>
       <p>Radicals, exponents, functions and more — randomized challenge sets that never repeat.</p>
       <div class="meta">Start course <span class="arrow">→</span></div>
-    </a>
+      <a class="tb-btn" href="textbooks/precalc11.pdf" target="_blank" rel="noopener">📖 Textbook</a>
+    </div>
 
     <div class="course soon" aria-disabled="true">
       <span class="badge soon">Coming soon</span>
@@ -110,6 +127,7 @@
       <h2>Pre-Calculus 12</h2>
       <p>Trigonometry, logarithms, and transformations of functions.</p>
       <div class="meta">In progress</div>
+      <a class="tb-btn" href="textbooks/precalc12.pdf" target="_blank" rel="noopener">📖 Textbook</a>
     </div>
 
     <div class="course soon" aria-disabled="true">
@@ -118,6 +136,7 @@
       <h2>Physics 11</h2>
       <p>Kinematics, forces, energy, and waves.</p>
       <div class="meta">In progress</div>
+      <a class="tb-btn" href="textbooks/physics11.pdf" target="_blank" rel="noopener">📖 Textbook</a>
     </div>
 
     <div class="course soon" aria-disabled="true">
@@ -126,6 +145,7 @@
       <h2>Chemistry 11</h2>
       <p>The mole, stoichiometry, and chemical reactions.</p>
       <div class="meta">In progress</div>
+      <a class="tb-btn" href="textbooks/chemistry11.pdf" target="_blank" rel="noopener">📖 Textbook</a>
     </div>
 
   </div>

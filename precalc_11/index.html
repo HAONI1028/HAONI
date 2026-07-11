@@ -91,6 +91,17 @@
 
   .unit.soon{opacity:.72;cursor:default}
 
+  .tb-btn{
+    display:inline-flex;align-items:center;gap:7px;margin-top:16px;
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;
+    color:var(--brand);background:var(--brand-soft);
+    padding:9px 15px;border-radius:20px;text-decoration:none;
+    border:1px solid transparent;
+    transition:background .15s ease, border-color .15s ease, transform .08s ease;
+  }
+  .tb-btn:hover{background:#fff;border-color:var(--brand)}
+  .tb-btn:active{transform:translateY(1px)}
+
   @media(max-width:460px){
     .unit p{display:none}
     .right .pill{display:none}
@@ -105,6 +116,7 @@
     <div class="kicker">Pre-Calculus 11</div>
     <h1 class="title">Units</h1>
     <p class="sub">Choose a unit to start practicing. Each set is randomized and gives instant feedback with traps and tips.</p>
+    <a class="tb-btn" href="../textbooks/precalc11.pdf" target="_blank" rel="noopener">📖 View textbook</a>
   </header>
 
   <div class="units">
