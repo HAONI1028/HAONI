@@ -1,6 +1,6 @@
 # HAONI
 
-My portfolio / link-in-bio page — the link that goes in my Discord bio.
+A real time website profile that links my actual Discord Profile and updates automatically when changes happen.
 
 Everything on the page (name, Discord username, bio, roles, projects, links) lives in
 the `PROFILE` object near the bottom of `index.html`. Edit that, push, done.
