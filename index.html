@@ -3,154 +3,639 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Study Hub — Courses</title>
+<title>HAONI</title>
+<meta name="description" content="HAONI — student, coder, occasional game maker. Projects, links and how to find me on Discord.">
+
+<!-- Link preview (what shows up when this URL is pasted into Discord) -->
+<meta property="og:type" content="profile">
+<meta property="og:title" content="HAONI">
+<meta property="og:description" content="Student · coder · occasional game maker. Projects, links and how to find me on Discord.">
+<meta property="og:image" content="https://github.com/HAONI1028.png?size=400">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#7C6CF6">
+
+<link rel="icon" href="https://github.com/HAONI1028.png?size=64">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
   :root{
-    --paper:#FBFAF7;
-    --card:#FFFFFF;
-    --ink:#1A1D29;
-    --muted:#6B7280;
-    --line:#E7E4DC;
-    --brand:#0F766E;
-    --brand-soft:#E4F1EF;
-    --amber:#B45309;
-    --amber-soft:#FBF0DF;
-    --radius:16px;
-    --shadow:0 1px 2px rgba(26,29,41,.04), 0 8px 24px rgba(26,29,41,.06);
-    --shadow-lift:0 2px 4px rgba(26,29,41,.05), 0 18px 40px rgba(26,29,41,.10);
+    --bg:#0E0F13;
+    --bg-glow:rgba(124,108,246,.18);
+    --card:#18191F;
+    --card-2:#202129;
+    --ink:#F2F3F5;
+    --muted:#A0A3AD;
+    --faint:#6E717B;
+    --line:#2A2B34;
+    --accent:#7C6CF6;
+    --accent-2:#38BDF8;
+    --accent-ink:#FFFFFF;
+    --online:#23A55A;
+    --idle:#F0B232;
+    --dnd:#F23F43;
+    --offline:#80848E;
+    --radius:18px;
+    --shadow:0 24px 60px rgba(0,0,0,.45);
+    color-scheme:dark;
   }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#F3F2F7;
+      --bg-glow:rgba(124,108,246,.16);
+      --card:#FFFFFF;
+      --card-2:#F4F4F7;
+      --ink:#17181D;
+      --muted:#5C5F6A;
+      --faint:#8A8D97;
+      --line:#E4E3EA;
+      --shadow:0 24px 60px rgba(30,25,70,.12);
+      color-scheme:light;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F3F2F7;
+    --bg-glow:rgba(124,108,246,.16);
+    --card:#FFFFFF;
+    --card-2:#F4F4F7;
+    --ink:#17181D;
+    --muted:#5C5F6A;
+    --faint:#8A8D97;
+    --line:#E4E3EA;
+    --shadow:0 24px 60px rgba(30,25,70,.12);
+    color-scheme:light;
+  }
+
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{
-    background:var(--paper);
+    min-height:100vh;
+    background:
+      radial-gradient(900px 500px at 15% -10%, var(--bg-glow), transparent 60%),
+      radial-gradient(700px 500px at 110% 10%, rgba(56,189,248,.10), transparent 60%),
+      var(--bg);
     color:var(--ink);
-    font-family:'Inter',system-ui,sans-serif;
-    font-size:16px;line-height:1.5;
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size:15px;line-height:1.55;
     -webkit-font-smoothing:antialiased;
-    padding:32px 16px 72px;
+    padding:48px 16px 64px;
   }
-  .wrap{max-width:820px;margin:0 auto}
+  a{color:inherit}
+  button{font:inherit;color:inherit}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-  .kicker{
-    font-family:'Space Grotesk',sans-serif;
-    font-size:12px;letter-spacing:.14em;text-transform:uppercase;
-    color:var(--brand);font-weight:600;margin-bottom:8px;
-  }
-  .title{
-    font-family:'Space Grotesk',sans-serif;
-    font-weight:700;font-size:34px;line-height:1.08;letter-spacing:-.015em;margin:0;
-  }
-  .sub{color:var(--muted);font-size:15px;margin-top:10px;max-width:52ch}
+  .wrap{max-width:620px;margin:0 auto}
 
-  .grid{
-    display:grid;gap:16px;margin-top:32px;
-    grid-template-columns:1fr;
+  /* ---------- profile card ---------- */
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    overflow:hidden;
   }
-  @media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+  .banner{
+    height:150px;
+    background:linear-gradient(120deg, var(--accent) 0%, #B06CF6 45%, var(--accent-2) 100%);
+    position:relative;
+  }
+  .banner::after{
+    content:"";position:absolute;inset:0;
+    background-image:radial-gradient(rgba(255,255,255,.22) 1px, transparent 1px);
+    background-size:14px 14px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.7), transparent 85%);
+    -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,.7), transparent 85%);
+  }
+  .theme-btn{
+    position:absolute;top:12px;right:12px;z-index:1;
+    width:34px;height:34px;border-radius:50%;
+    border:0;background:rgba(0,0,0,.28);color:#fff;cursor:pointer;
+    display:grid;place-items:center;font-size:19px;line-height:1;
+    backdrop-filter:blur(6px);
+    transition:background .15s ease;
+  }
+  .theme-btn:hover{background:rgba(0,0,0,.45)}
 
-  .course{
-    display:flex;flex-direction:column;text-decoration:none;color:inherit;
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    box-shadow:var(--shadow);padding:22px;position:relative;overflow:hidden;
-    transition:transform .12s ease, box-shadow .18s ease, border-color .18s ease;
+  .head{padding:0 24px;position:relative}
+  .avatar-wrap{
+    position:relative;width:120px;height:120px;margin-top:-62px;
+    border-radius:50%;background:var(--card);padding:6px;
   }
-  .course.live:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);border-color:var(--brand)}
-  .course .emoji{font-size:30px;line-height:1;margin-bottom:16px}
-  .course h2{
-    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:19px;
-    margin:0 0 6px;letter-spacing:-.01em;
+  .avatar{
+    width:100%;height:100%;border-radius:50%;object-fit:cover;display:block;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
   }
-  .course p{margin:0;font-size:14px;color:var(--muted);line-height:1.45}
-  .meta{
-    margin-top:18px;display:flex;align-items:center;gap:8px;
-    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;color:var(--brand);
+  .status{
+    position:absolute;right:6px;bottom:6px;
+    width:28px;height:28px;border-radius:50%;
+    background:var(--offline);border:6px solid var(--card);
   }
-  .meta .arrow{transition:transform .18s ease}
-  .course.live:hover .meta .arrow{transform:translateX(4px)}
+  .status[data-s="online"]{background:var(--online)}
+  .status[data-s="idle"]{background:var(--idle)}
+  .status[data-s="dnd"]{background:var(--dnd)}
 
+  .badges{
+    position:absolute;top:14px;right:20px;
+    display:flex;gap:4px;padding:4px 6px;
+    background:var(--card-2);border:1px solid var(--line);border-radius:10px;
+  }
   .badge{
-    position:absolute;top:16px;right:16px;
-    font-family:'Space Grotesk',sans-serif;font-weight:600;
-    font-size:11px;letter-spacing:.06em;text-transform:uppercase;
-    padding:4px 10px;border-radius:20px;
+    width:28px;height:28px;display:grid;place-items:center;
+    font-size:16px;border-radius:7px;cursor:default;position:relative;
   }
-  .badge.ready{color:var(--brand);background:var(--brand-soft)}
-  .badge.soon{color:var(--amber);background:var(--amber-soft)}
+  .badge:hover,.badge:focus-visible{background:var(--line);outline:none}
+  .badge .tip{
+    position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:#000;color:#fff;font-size:12px;font-weight:500;white-space:nowrap;
+    padding:5px 9px;border-radius:6px;pointer-events:none;
+    opacity:0;transition:opacity .12s ease;
+  }
+  .badge:hover .tip,.badge:focus-visible .tip{opacity:1}
 
-  .course.soon{cursor:default}
-  .course.soon .emoji,.course.soon h2,.course.soon p{opacity:.6}
-  .course.soon .meta{color:var(--muted)}
+  .names{
+    margin:14px 0 0;padding:14px 16px;
+    background:var(--card-2);border:1px solid var(--line);border-radius:12px;
+  }
+  .display{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;
+    font-size:26px;line-height:1.1;letter-spacing:-.015em;margin:0;
+  }
+  .handle-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:6px;color:var(--muted)}
+  .handle{font-weight:500;color:var(--ink)}
+  .pronouns{font-size:13px}
+  .dot-sep{color:var(--faint)}
+  .copy-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:4px 10px;border-radius:999px;cursor:pointer;
+    background:transparent;border:1px solid var(--line);
+    font-size:12.5px;font-weight:600;color:var(--muted);
+    transition:border-color .15s ease,color .15s ease,background .15s ease;
+  }
+  .copy-btn:hover{border-color:var(--accent);color:var(--ink)}
+  .copy-btn.done{border-color:var(--online);color:var(--online)}
+  .tagline{margin:10px 0 0;color:var(--muted);font-size:14px}
 
-  /* whole-card link (stretched) so the textbook button can sit above it */
-  .course-link{position:absolute;inset:0;z-index:1;border-radius:var(--radius)}
-  .tb-btn{
-    position:relative;z-index:2;align-self:flex-start;margin-top:16px;
+  /* ---------- tabs ---------- */
+  .tabs{
+    display:flex;gap:22px;margin:18px 24px 0;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;scrollbar-width:none;
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    background:none;border:0;cursor:pointer;
+    padding:10px 0 12px;margin-bottom:-1px;
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;
+    color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;
+    transition:color .15s ease,border-color .15s ease;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{color:var(--ink);border-color:var(--ink)}
+
+  .panel{padding:20px 24px 26px}
+  .panel[hidden]{display:none}
+
+  .section + .section{margin-top:22px}
+  .label{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;
+    font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 8px;
+  }
+  .about p{margin:0 0 10px}
+  .about p:last-child{margin-bottom:0}
+
+  .activity{
+    display:flex;gap:14px;align-items:center;
+    background:var(--card-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;
+  }
+  .activity .art{
+    width:52px;height:52px;flex:none;border-radius:10px;
+    display:grid;place-items:center;font-size:26px;
+    background:linear-gradient(135deg, rgba(124,108,246,.25), rgba(56,189,248,.25));
+    overflow:hidden;
+  }
+  .activity .art img{width:100%;height:100%;object-fit:cover}
+  .activity .what{font-weight:600}
+  .activity .detail{color:var(--muted);font-size:13.5px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{
     display:inline-flex;align-items:center;gap:7px;
-    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:12.5px;
-    color:var(--brand);background:var(--brand-soft);
-    padding:8px 13px;border-radius:20px;text-decoration:none;
-    border:1px solid transparent;
-    transition:background .15s ease, border-color .15s ease, transform .08s ease;
+    padding:4px 10px 4px 8px;border-radius:7px;
+    background:var(--card-2);border:1px solid var(--line);
+    font-size:13px;font-weight:500;
   }
-  .tb-btn:hover{background:#fff;border-color:var(--brand)}
-  .tb-btn:active{transform:translateY(1px)}
+  .chip i{width:10px;height:10px;border-radius:50%;flex:none}
 
-  .foot{margin-top:40px;font-size:13px;color:var(--muted);text-align:center}
+  .facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+  .fact{
+    background:var(--card-2);border:1px solid var(--line);border-radius:12px;
+    padding:10px 14px;
+  }
+  .fact .k{font-size:12px;color:var(--muted)}
+  .fact .v{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin-top:2px}
+
+  /* projects */
+  .projects{display:grid;gap:10px}
+  .project{
+    display:flex;gap:14px;align-items:flex-start;text-decoration:none;
+    background:var(--card-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px;
+    transition:border-color .15s ease, transform .12s ease;
+  }
+  a.project:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .project .emoji{font-size:24px;line-height:1;width:40px;height:40px;flex:none;display:grid;place-items:center;border-radius:10px;background:var(--card)}
+  .project h3{
+    margin:0;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;
+    display:flex;align-items:center;gap:8px;
+  }
+  .project h3 .arrow{color:var(--faint);font-size:14px;transition:transform .15s ease,color .15s ease}
+  a.project:hover h3 .arrow{transform:translate(2px,-2px);color:var(--accent)}
+  .project p{margin:4px 0 0;color:var(--muted);font-size:14px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .tag{font-size:11.5px;font-weight:600;color:var(--muted);padding:2px 8px;border-radius:999px;border:1px solid var(--line)}
+
+  /* connections */
+  .links{display:grid;gap:8px}
+  .link{
+    display:flex;align-items:center;gap:12px;text-decoration:none;
+    background:var(--card-2);border:1px solid var(--line);border-radius:12px;
+    padding:12px 14px;cursor:pointer;width:100%;text-align:left;
+    transition:border-color .15s ease;
+  }
+  .link:hover{border-color:var(--accent)}
+  .link .ico{width:32px;height:32px;flex:none;display:grid;place-items:center;border-radius:8px;background:var(--card)}
+  .link .ico svg{width:18px;height:18px;fill:currentColor}
+  .link .name{font-weight:600}
+  .link .sub{color:var(--muted);font-size:13px}
+  .link .go{margin-left:auto;color:var(--faint);font-size:13px;font-weight:600}
+
+  .foot{margin-top:22px;text-align:center;color:var(--faint);font-size:12.5px}
+  .foot a{color:var(--muted)}
+
+  @media (max-width:480px){
+    body{padding-top:24px}
+    .head,.panel{padding-left:16px;padding-right:16px}
+    .tabs{margin-left:16px;margin-right:16px}
+    .banner{height:120px}
+    .avatar-wrap{width:104px;height:104px;margin-top:-54px}
+    .badges{right:12px}
+    .facts{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="kicker">Study Hub</div>
-    <h1 class="title">Choose a course</h1>
-    <p class="sub">Pick a subject to see its units, then drill through exam-plus practice questions with instant feedback.</p>
-  </header>
-
-  <div class="grid">
-
-    <div class="course live">
-      <a class="course-link" href="precalc_11/index.html" aria-label="Open Pre-Calculus 11"></a>
-      <span class="badge ready">Ready</span>
-      <div class="emoji">📐</div>
-      <h2>Pre-Calculus 11</h2>
-      <p>Radicals, exponents, functions and more — randomized challenge sets that never repeat.</p>
-      <div class="meta">Start course <span class="arrow">→</span></div>
-      <a class="tb-btn" href="https://mscrossteacher.wordpress.com/wp-content/uploads/2018/02/mcgrawhill-pre-calc-11-textbook.pdf" target="_blank" rel="noopener">📖 Textbook</a>
+<main class="wrap">
+  <article class="card" aria-labelledby="display-name">
+    <div class="banner">
+      <button class="theme-btn" id="theme-btn" type="button" aria-label="Toggle light/dark theme">◐</button>
     </div>
 
-    <div class="course soon" aria-disabled="true">
-      <span class="badge soon">Coming soon</span>
-      <div class="emoji">🧮</div>
-      <h2>Pre-Calculus 12</h2>
-      <p>Trigonometry, logarithms, and transformations of functions.</p>
-      <div class="meta">In progress</div>
-      <a class="tb-btn" href="textbooks/precalc12.pdf" target="_blank" rel="noopener">📖 Textbook</a>
-    </div>
+    <header class="head">
+      <div class="avatar-wrap">
+        <img class="avatar" id="avatar" alt="" width="108" height="108">
+        <span class="status" id="status" data-s="offline" role="img" aria-label="Status: offline"></span>
+      </div>
+      <div class="badges" id="badges"></div>
 
-    <div class="course soon" aria-disabled="true">
-      <span class="badge soon">Coming soon</span>
-      <div class="emoji">🔬</div>
-      <h2>Physics 11</h2>
-      <p>Kinematics, forces, energy, and waves.</p>
-      <div class="meta">In progress</div>
-      <a class="tb-btn" href="textbooks/physics11.pdf" target="_blank" rel="noopener">📖 Textbook</a>
-    </div>
+      <div class="names">
+        <h1 class="display" id="display-name"></h1>
+        <div class="handle-row">
+          <span class="handle" id="handle"></span>
+          <span class="dot-sep" id="pronoun-sep" hidden>•</span>
+          <span class="pronouns" id="pronouns" hidden></span>
+          <button class="copy-btn" id="copy-btn" type="button">Copy username</button>
+        </div>
+        <p class="tagline" id="tagline"></p>
+      </div>
+    </header>
 
-    <div class="course soon" aria-disabled="true">
-      <span class="badge soon">Coming soon</span>
-      <div class="emoji">⚗️</div>
-      <h2>Chemistry 11</h2>
-      <p>The mole, stoichiometry, and chemical reactions.</p>
-      <div class="meta">In progress</div>
-      <a class="tb-btn" href="textbooks/chemistry11.pdf" target="_blank" rel="noopener">📖 Textbook</a>
-    </div>
+    <nav class="tabs" role="tablist" aria-label="Profile sections">
+      <button class="tab" role="tab" id="tab-about" aria-controls="about" aria-selected="true">About me</button>
+      <button class="tab" role="tab" id="tab-projects" aria-controls="projects" aria-selected="false" tabindex="-1">Projects</button>
+      <button class="tab" role="tab" id="tab-links" aria-controls="links" aria-selected="false" tabindex="-1">Connections</button>
+    </nav>
 
-  </div>
+    <section class="panel" id="about" role="tabpanel" aria-labelledby="tab-about">
+      <div class="section">
+        <h2 class="label">About me</h2>
+        <div class="about" id="bio"></div>
+      </div>
+      <div class="section" id="activity-section">
+        <h2 class="label" id="activity-label">Currently</h2>
+        <div class="activity">
+          <div class="art" id="activity-art"></div>
+          <div>
+            <div class="what" id="activity-what"></div>
+            <div class="detail" id="activity-detail"></div>
+          </div>
+        </div>
+      </div>
+      <div class="section">
+        <h2 class="label">Roles</h2>
+        <div class="chips" id="roles"></div>
+      </div>
+      <div class="section">
+        <h2 class="label">Info</h2>
+        <div class="facts" id="facts"></div>
+      </div>
+    </section>
 
-  <p class="foot">More courses and units are added over time.</p>
-</div>
+    <section class="panel" id="projects" role="tabpanel" aria-labelledby="tab-projects" hidden>
+      <div class="projects" id="project-list"></div>
+    </section>
+
+    <section class="panel" id="links" role="tabpanel" aria-labelledby="tab-links" hidden>
+      <div class="links" id="link-list"></div>
+    </section>
+  </article>
+
+  <p class="foot">made by <span id="foot-name"></span> · <a href="https://github.com/HAONI1028/haoni" target="_blank" rel="noopener">source</a></p>
+</main>
+
+<script>
+/* =====================================================================
+   EDIT ME — everything on the page comes from this object.
+   ===================================================================== */
+const PROFILE = {
+  displayName: "HAONI",
+  username: "haoni",            // your Discord username (shown + copied by the button)
+  pronouns: "",                 // e.g. "he/him" — leave "" to hide
+  tagline: "student · coder · too lazy to write bios",
+  avatar: "https://github.com/HAONI1028.png?size=256",
+  githubUser: "HAONI1028",      // used for live repo/follower stats
+
+  // Optional: your Discord user ID (Settings → Advanced → Developer Mode,
+  // then right-click yourself → Copy User ID). If you also join the Lanyard
+  // Discord server (discord.gg/lanyard), the page shows your real live
+  // status + what you're playing/listening to. Leave "" to skip.
+  discordId: "",
+
+  timezone: "America/Vancouver",
+
+  bio: [
+    "hey, i'm haoni 👋 high school student who likes making things on the computer.",
+    "mostly i build little web tools and games — like a practice-question site for my math class — and mess around with python when i'm bored.",
+    "dm me on discord if you want to talk code, games, or need help with homework (no promises).",
+  ],
+
+  // Shown when live Discord status isn't available.
+  currently: { emoji: "💻", what: "Building stuff", detail: "probably this website" },
+
+  badges: [
+    { emoji: "🎓", label: "Student" },
+    { emoji: "⌨️", label: "Coder" },
+    { emoji: "🎮", label: "Gamer" },
+    { emoji: "📐", label: "Math enjoyer" },
+  ],
+
+  roles: [
+    { name: "Web dev",    color: "#7C6CF6" },
+    { name: "Python",     color: "#F0B232" },
+    { name: "JavaScript", color: "#38BDF8" },
+    { name: "Game maker", color: "#23A55A" },
+    { name: "Pre-Calc survivor", color: "#F2618B" },
+  ],
+
+  projects: [
+    {
+      emoji: "📚", name: "Study Hub",
+      desc: "Practice-question site for Pre-Calculus 11 with a custom quiz engine — randomized questions and instant feedback across nine units.",
+      tags: ["HTML", "CSS", "JavaScript"],
+      url: "https://github.com/HAONI1028/haoni",
+    },
+    {
+      emoji: "🕹️", name: "Web Games",
+      desc: "Browser games built from scratch in plain JavaScript, no engine.",
+      tags: ["JavaScript", "Canvas"],
+      url: "",
+    },
+    {
+      emoji: "🐍", name: "Python experiments",
+      desc: "Scripts and small programs I write to learn and automate things.",
+      tags: ["Python"],
+      url: "",
+    },
+  ],
+
+  // type: "github" | "discord" | "link" | "email"
+  links: [
+    { type: "discord", name: "Discord", sub: "click to copy my username" },
+    { type: "github",  name: "GitHub",  sub: "@HAONI1028", url: "https://github.com/HAONI1028" },
+  ],
+};
+/* ===================================================================== */
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => {
+  const n = Object.assign(document.createElement(tag), props);
+  kids.flat().forEach(k => k != null && n.append(k));
+  return n;
+};
+
+const ICONS = {
+  github: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.1-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.84 1.19 3.1 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>',
+  discord: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9a2.5 2.5 0 0 1-2.5 2.5H9.4l-4.2 3.6c-.5.43-1.2.07-1.2-.58V5.5Zm5 5.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm6 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z"/></svg>',
+  email: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm9 7.2L4 7.3V17h16V7.3l-8 4.9Z"/></svg>',
+  link: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.4-3.4a1 1 0 1 1 1.4 1.4L12 13.4a1 1 0 0 1-1.4 0Zm-2.9 5.3a4 4 0 0 1-2.8-6.8l2.1-2.1a1 1 0 0 1 1.4 1.4l-2.1 2.1a2 2 0 0 0 2.8 2.8l2.1-2.1a1 1 0 1 1 1.4 1.4l-2.1 2.1a4 4 0 0 1-2.8 1.2Zm8-5.2a1 1 0 0 1-.7-1.7l2.1-2.1a2 2 0 0 0-2.8-2.8l-2.1 2.1a1 1 0 0 1-1.4-1.4l2.1-2.1a4 4 0 0 1 5.6 5.6l-2.1 2.1a1 1 0 0 1-.7.3Z"/></svg>',
+};
+
+/* ---------- copy username ---------- */
+async function copyUsername(btn, resetText) {
+  try {
+    await navigator.clipboard.writeText(PROFILE.username);
+  } catch {
+    const t = el("textarea", { value: PROFILE.username });
+    document.body.append(t); t.select();
+    try { document.execCommand("copy"); } catch {}
+    t.remove();
+  }
+  const target = btn.querySelector(".go") || btn;
+  target.textContent = "Copied!";
+  btn.classList.add("done");
+  setTimeout(() => { target.textContent = resetText; btn.classList.remove("done"); }, 1600);
+}
+
+/* ---------- render static profile ---------- */
+function render() {
+  const P = PROFILE;
+  document.title = P.displayName;
+  $("display-name").textContent = P.displayName;
+  $("foot-name").textContent = P.displayName.toLowerCase();
+  $("handle").textContent = P.username;
+  $("tagline").textContent = P.tagline;
+  $("avatar").src = P.avatar;
+  $("avatar").alt = `${P.displayName}'s avatar`;
+  $("avatar").onerror = function(){ this.removeAttribute("src"); };
+
+  if (P.pronouns) {
+    $("pronouns").textContent = P.pronouns;
+    $("pronouns").hidden = $("pronoun-sep").hidden = false;
+  }
+
+  $("copy-btn").onclick = (e) => copyUsername(e.currentTarget, "Copy username");
+
+  $("badges").replaceChildren(...P.badges.map(b =>
+    el("span", { className: "badge", tabIndex: 0, ariaLabel: b.label }, b.emoji, el("span", { className: "tip", textContent: b.label }))
+  ));
+
+  $("bio").replaceChildren(...P.bio.map(t => el("p", { textContent: t })));
+
+  setActivity(P.currently.emoji, P.currently.what, P.currently.detail, "Currently");
+
+  $("roles").replaceChildren(...P.roles.map(r => {
+    const dot = el("i"); dot.style.background = r.color;
+    return el("span", { className: "chip" }, dot, r.name);
+  }));
+
+  renderFacts();
+
+  $("project-list").replaceChildren(...P.projects.map(p => {
+    const body = el("div", {},
+      el("h3", {}, p.name, p.url ? el("span", { className: "arrow", textContent: "↗" }) : null),
+      el("p", { textContent: p.desc }),
+      el("div", { className: "tags" }, p.tags.map(t => el("span", { className: "tag", textContent: t })))
+    );
+    const emoji = el("div", { className: "emoji", textContent: p.emoji });
+    return p.url
+      ? el("a", { className: "project", href: p.url, target: "_blank", rel: "noopener" }, emoji, body)
+      : el("div", { className: "project" }, emoji, body);
+  }));
+
+  $("link-list").replaceChildren(...P.links.map(l => {
+    const ico = el("span", { className: "ico" }); ico.innerHTML = ICONS[l.type] || ICONS.link;
+    const text = el("div", {}, el("div", { className: "name", textContent: l.name }), el("div", { className: "sub", textContent: l.sub || "" }));
+    if (l.type === "discord") {
+      const btn = el("button", { className: "link", type: "button" }, ico, text, el("span", { className: "go", textContent: P.username }));
+      btn.onclick = () => copyUsername(btn, P.username);
+      return btn;
+    }
+    const href = l.type === "email" ? `mailto:${l.url}` : l.url;
+    return el("a", { className: "link", href, target: "_blank", rel: "noopener" }, ico, text, el("span", { className: "go", textContent: "Open ↗" }));
+  }));
+}
+
+/* ---------- info facts (local time + GitHub stats) ---------- */
+const facts = { "Local time": "—" };
+function renderFacts() {
+  $("facts").replaceChildren(...Object.entries(facts).map(([k, v]) =>
+    el("div", { className: "fact" }, el("div", { className: "k", textContent: k }), el("div", { className: "v", textContent: v }))
+  ));
+}
+function tickClock() {
+  try {
+    facts["Local time"] = new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit", timeZone: PROFILE.timezone }).format(new Date());
+  } catch { delete facts["Local time"]; }
+  renderFacts();
+}
+
+async function loadGitHub() {
+  if (!PROFILE.githubUser) return;
+  try {
+    const r = await fetch(`https://api.github.com/users/${PROFILE.githubUser}`);
+    if (!r.ok) return;
+    const u = await r.json();
+    facts["Coding on GitHub since"] = new Date(u.created_at).getFullYear().toString();
+    facts["Public repos"] = String(u.public_repos);
+    renderFacts();
+  } catch {}
+}
+
+/* ---------- live Discord presence (via Lanyard) ---------- */
+function setActivity(art, what, detail, label) {
+  const artEl = $("activity-art");
+  if (art && /^https?:/.test(art)) artEl.replaceChildren(el("img", { src: art, alt: "" }));
+  else artEl.textContent = art || "✨";
+  $("activity-what").textContent = what;
+  $("activity-detail").textContent = detail || "";
+  $("activity-label").textContent = label;
+}
+
+function setStatus(s) {
+  const names = { online: "Online", idle: "Idle", dnd: "Do not disturb", offline: "Offline" };
+  $("status").dataset.s = s;
+  $("status").setAttribute("aria-label", `Status: ${names[s] || s}`);
+  $("status").title = names[s] || s;
+}
+
+function applyPresence(d) {
+  setStatus(d.discord_status || "offline");
+  if (d.listening_to_spotify && d.spotify) {
+    setActivity(d.spotify.album_art_url, d.spotify.song, `by ${d.spotify.artist}`, "Listening to Spotify");
+    return;
+  }
+  const a = (d.activities || []).find(x => x.type === 0) || (d.activities || []).find(x => x.type !== 4);
+  if (a) {
+    let img = null;
+    const large = a.assets && a.assets.large_image;
+    if (large && large.startsWith("mp:external/")) img = `https://media.discordapp.net/external/${large.slice(12)}`;
+    else if (large && a.application_id) img = `https://cdn.discordapp.com/app-assets/${a.application_id}/${large}.png`;
+    setActivity(img || "🎮", a.name, [a.details, a.state].filter(Boolean).join(" · "), a.type === 2 ? "Listening" : "Playing");
+  } else {
+    const c = PROFILE.currently;
+    setActivity(c.emoji, c.what, c.detail, "Currently");
+  }
+}
+
+async function loadPresence() {
+  if (!PROFILE.discordId) return;
+  try {
+    const r = await fetch(`https://api.lanyard.rest/v1/users/${PROFILE.discordId}`);
+    const j = await r.json();
+    if (j.success) applyPresence(j.data);
+  } catch {}
+}
+
+/* ---------- tabs ---------- */
+function initTabs() {
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  const select = (tab, focus) => {
+    tabs.forEach(t => {
+      const on = t === tab;
+      t.setAttribute("aria-selected", on);
+      t.tabIndex = on ? 0 : -1;
+      $(t.getAttribute("aria-controls")).hidden = !on;
+    });
+    if (focus) tab.focus();
+    history.replaceState(null, "", "#" + tab.getAttribute("aria-controls"));
+  };
+  tabs.forEach((t, i) => {
+    t.onclick = () => select(t);
+    t.onkeydown = (e) => {
+      const d = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+      if (d) { e.preventDefault(); select(tabs[(i + d + tabs.length) % tabs.length], true); }
+    };
+  });
+  const fromHash = tabs.find(t => "#" + t.getAttribute("aria-controls") === location.hash);
+  if (fromHash) select(fromHash);
+}
+
+/* ---------- theme toggle ---------- */
+function initTheme() {
+  const root = document.documentElement;
+  try { const saved = localStorage.getItem("theme"); if (saved) root.dataset.theme = saved; } catch {}
+  $("theme-btn").onclick = () => {
+    const isLight = root.dataset.theme
+      ? root.dataset.theme === "light"
+      : matchMedia("(prefers-color-scheme: light)").matches;
+    root.dataset.theme = isLight ? "dark" : "light";
+    try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+  };
+}
+
+initTheme();
+render();
+initTabs();
+tickClock();
+setInterval(tickClock, 15000);
+loadGitHub();
+loadPresence();
+setInterval(loadPresence, 30000);
+</script>
 </body>
 </html>
