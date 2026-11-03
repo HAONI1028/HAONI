@@ -204,6 +204,19 @@
   }
   .about p{margin:0 0 10px}
   .about p:last-child{margin-bottom:0}
+  .about a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1.5px}
+  .about a:hover{color:var(--accent-2)}
+  .cta{
+    display:inline-flex;align-items:center;gap:9px;margin-top:14px;
+    padding:9px 16px;border-radius:10px;text-decoration:none;
+    background:var(--accent);color:var(--accent-ink);
+    font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;
+    transition:filter .15s ease, transform .08s ease;
+  }
+  .cta[hidden]{display:none}
+  .cta:hover{filter:brightness(1.1)}
+  .cta:active{transform:translateY(1px)}
+  .cta svg{width:18px;height:18px;fill:currentColor}
 
   .activity{
     display:flex;gap:14px;align-items:center;
@@ -325,6 +338,7 @@
       <div class="section">
         <h2 class="label">About me</h2>
         <div class="about" id="bio"></div>
+        <a class="cta" id="discord-cta" target="_blank" rel="noopener" hidden></a>
       </div>
       <div class="section" id="activity-section">
         <h2 class="label" id="activity-label">Currently</h2>
@@ -364,7 +378,8 @@
    ===================================================================== */
 const PROFILE = {
   displayName: "HAONI",
-  username: "haoni",            // your Discord username (shown + copied by the button)
+  username: "haoni1028",        // your Discord username (shown + copied by the button)
+  discordUrl: "https://discord.com/users/955378599412764722", // your Discord profile link
   pronouns: "",                 // e.g. "he/him" — leave "" to hide
   tagline: "student · coder · too lazy to write bios",
   avatar: "https://github.com/HAONI1028.png?size=256",
@@ -374,14 +389,14 @@ const PROFILE = {
   // then right-click yourself → Copy User ID). If you also join the Lanyard
   // Discord server (discord.gg/lanyard), the page shows your real live
   // status + what you're playing/listening to. Leave "" to skip.
-  discordId: "",
+  discordId: "955378599412764722",
 
   timezone: "America/Vancouver",
 
   bio: [
     "hey, i'm haoni 👋 high school student who likes making things on the computer.",
     "mostly i build little web tools and games — like a practice-question site for my math class — and mess around with python when i'm bored.",
-    "dm me on discord if you want to talk code, games, or need help with homework (no promises).",
+    "dm me on [discord](https://discord.com/users/955378599412764722) if you want to talk code, games, or need help with homework (no promises).",
   ],
 
   // Shown when live Discord status isn't available.
@@ -425,7 +440,7 @@ const PROFILE = {
 
   // type: "github" | "discord" | "link" | "email"
   links: [
-    { type: "discord", name: "Discord", sub: "click to copy my username" },
+    { type: "discord", name: "Discord", sub: "@haoni1028", url: "https://discord.com/users/955378599412764722" },
     { type: "github",  name: "GitHub",  sub: "@HAONI1028", url: "https://github.com/HAONI1028" },
   ],
 };
@@ -484,7 +499,25 @@ function render() {
     el("span", { className: "badge", tabIndex: 0, ariaLabel: b.label }, b.emoji, el("span", { className: "tip", textContent: b.label }))
   ));
 
-  $("bio").replaceChildren(...P.bio.map(t => el("p", { textContent: t })));
+  // bio lines support [text](https://link) for inline links
+  $("bio").replaceChildren(...P.bio.map(t => {
+    const p = el("p");
+    let last = 0;
+    for (const m of t.matchAll(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g)) {
+      p.append(t.slice(last, m.index), el("a", { href: m[2], target: "_blank", rel: "noopener", textContent: m[1] }));
+      last = m.index + m[0].length;
+    }
+    p.append(t.slice(last));
+    return p;
+  }));
+
+  if (P.discordUrl) {
+    const cta = $("discord-cta");
+    cta.href = P.discordUrl;
+    cta.innerHTML = ICONS.discord;
+    cta.append("Add me on Discord ↗");
+    cta.hidden = false;
+  }
 
   setActivity(P.currently.emoji, P.currently.what, P.currently.detail, "Currently");
 
@@ -510,7 +543,7 @@ function render() {
   $("link-list").replaceChildren(...P.links.map(l => {
     const ico = el("span", { className: "ico" }); ico.innerHTML = ICONS[l.type] || ICONS.link;
     const text = el("div", {}, el("div", { className: "name", textContent: l.name }), el("div", { className: "sub", textContent: l.sub || "" }));
-    if (l.type === "discord") {
+    if (l.type === "discord" && !l.url) {
       const btn = el("button", { className: "link", type: "button" }, ico, text, el("span", { className: "go", textContent: P.username }));
       btn.onclick = () => copyUsername(btn, P.username);
       return btn;
