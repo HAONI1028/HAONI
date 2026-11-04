@@ -76,6 +76,11 @@ async function openLock(lock, password) {
    Logging out wipes both. Idle sessions lock after 30 minutes.
    ===================================================================== */
 const SESSION_NAME = "haoni.panelSession", IDLE_LIMIT = 30 * 60 * 1000;
+// "Log out everywhere" changes this value on Lanyard (KV "panel_epoch"). Every
+// session remembers the value it started under; when they differ, it logs out.
+const EPOCH_KEY = "panel_epoch";
+let epoch = "";
+const newEpoch = () => toB64(crypto.getRandomValues(new Uint8Array(12)));
 let memKey = "", stayLoggedIn = false, lastActive = Date.now();
 const getKey = () => memKey;
 
@@ -111,7 +116,7 @@ async function startSession(key, remember) {
     const dk = await deviceKey(true);
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, dk, te.encode(key)));
-    const sealed = JSON.stringify({ iv: toB64(iv), ct: toB64(ct) });
+    const sealed = JSON.stringify({ iv: toB64(iv), ct: toB64(ct), epoch });
     (remember ? localStorage : sessionStorage).setItem(SESSION_NAME, sealed);
     (remember ? sessionStorage : localStorage).removeItem(SESSION_NAME);
   } catch {}   // storage blocked: stay logged in for this page only
@@ -121,11 +126,11 @@ async function resumeSession() {
     const tab = sessionStorage.getItem(SESSION_NAME), kept = localStorage.getItem(SESSION_NAME);
     if (!tab && !kept) return false;
     const dk = await deviceKey(false);
-    const { iv, ct } = JSON.parse(tab || kept);
-    memKey = td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(iv) }, dk, fromB64(ct)));
+    const sealed = JSON.parse(tab || kept);
+    memKey = td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(sealed.iv) }, dk, fromB64(sealed.ct)));
     stayLoggedIn = !tab;
     lastActive = Date.now();
-    return true;
+    return sealed.epoch || "";
   } catch {
     memKey = "";
     return false;
@@ -215,9 +220,10 @@ $("setup-form").addEventListener("submit", async (e) => {
   if (bad) return formError("setup-error", bad);
   btn.disabled = true; btn.textContent = "Setting up…";
   try {
-    const lock = await makeLock(key, pw);
-    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock }), key);   // Lanyard checks the key here
+    const lock = await makeLock(key, pw), fresh = newEpoch();
+    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock, [EPOCH_KEY]: fresh }), key);   // Lanyard checks the key here
     lockStr = lock;
+    epoch = fresh;
     legacyKey = "";
     await startSession(key, $("setup-stay").checked);
     ["setup-key", "setup-pw", "setup-pw2"].forEach(id => { $(id).value = ""; });
@@ -242,6 +248,40 @@ $("logout-btn").addEventListener("click", async () => {
   await endSession();
   showGate(lockStr ? "login" : "setup");
 });
+$("logout-all-btn").addEventListener("click", async () => {
+  if (!confirm("Log out of the control panel on every device, including this one?")) return;
+  if (isDirty() && !confirm("You have unsaved changes. Log out anyway?")) return;
+  const btn = $("logout-all-btn");
+  btn.disabled = true;
+  try {
+    const fresh = newEpoch();
+    await lanyard("PATCH", "/kv", JSON.stringify({ [EPOCH_KEY]: fresh }));
+    epoch = fresh;
+    await endSession();
+    showGate("login");
+    toast("Logged out on every device.");
+  } catch (err) {
+    toast(err.message, "error");
+  } finally {
+    btn.disabled = false;
+  }
+});
+// check now and then (and whenever this tab comes back) whether we've been logged out elsewhere
+async function checkEpoch() {
+  if (!memKey || !loaded) return true;
+  try {
+    const j = await (await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}`)).json();
+    const current = (j.success && j.data.kv && j.data.kv[EPOCH_KEY]) || "";
+    if (current === epoch) return true;
+    epoch = current;
+    await endSession();
+    showGate("login");
+    toast("You were logged out from another device.");
+    return false;
+  } catch { return true; }   // offline: try again later
+}
+setInterval(checkEpoch, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkEpoch(); });
 $("chpw-toggle").addEventListener("click", () => {
   const f = $("chpw-form");
   f.hidden = !f.hidden;
@@ -256,13 +296,15 @@ $("chpw-form").addEventListener("submit", async (e) => {
   $("chpw-error").hidden = true;
   btn.disabled = true; btn.textContent = "Saving…";
   try {
-    const lock = await makeLock(getKey(), pw);
-    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock }));
+    const lock = await makeLock(getKey(), pw), fresh = newEpoch();
+    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock, [EPOCH_KEY]: fresh }));
     lockStr = lock;
+    epoch = fresh;
+    await startSession(getKey(), stayLoggedIn);   // keep this device logged in
     $("chpw-1").value = $("chpw-2").value = "";
     $("chpw-form").hidden = true;
     $("chpw-toggle").setAttribute("aria-expanded", "false");
-    toast("Password changed.");
+    toast("Password changed. Other devices have been logged out.");
   } catch (err) {
     formError("chpw-error", err.message);
   } finally {
@@ -507,6 +549,7 @@ async function lanyard(method, path, body, key = getKey()) {
 }
 
 async function save() {
+  if (memKey && !(await checkEpoch())) return;
   if (!loaded || saving || !isDirty()) return;
   if (!getKey()) { showGate(lockStr ? "login" : "setup"); return; }
   const settings = S.sanitize(draft.settings);
@@ -569,8 +612,11 @@ async function load() {
     discord = j.data.discord_user;
     const kv = j.data.kv || {};
     lockStr = kv[LOCK_KEY] || "";
+    epoch = kv[EPOCH_KEY] || "";
+    const sessionEpoch = await resumed;       // false = no saved session
+    if (sessionEpoch !== false && sessionEpoch !== epoch) await endSession();   // logged out everywhere since
     if (!lockStr) showGate("setup");          // first time: create a password
-    else if (await resumed) hideGate();       // still logged in on this device
+    else if (memKey) hideGate();              // still logged in on this device
     else showGate("login");
     saved = { settings: S.sanitize(kv.site), bio: kv.bio || "", pronouns: kv.pronouns || "" };
     draft = clone(saved);

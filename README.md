@@ -40,6 +40,9 @@ updates instantly. Use **Export settings** for a backup.
   F12 → Application is useless on another computer. Logging out deletes both. A normal session
   locks itself after 30 minutes without activity. Still: someone using your *logged-in* browser
   can act as you, so only tick "Stay logged in" on your own device.
+- **Log out everywhere** (Account section) signs the panel out on every device. Changing your
+  password does the same for your other devices. This ends panel sessions; if you think the API
+  key itself was copied, also DM `.apikey` and use **Forgot password?**.
 - **Both pages block outside scripts** (Content-Security-Policy), the panel won't run inside
   another site's frame, and its live preview runs in a sealed-off sandbox.
 - **Use a long, unique password** — anyone can download the encrypted key and try guesses offline.
