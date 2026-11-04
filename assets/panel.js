@@ -19,15 +19,9 @@ const el = (tag, props = {}, ...kids) => {
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const fields = $("fields");
-// The old (password-less) panel saved the plain API key under this name with
-// "remember" on by default. Remove it so it can't skip the login; keep it in
-// memory only, to fill in the one-time password setup.
-let legacyKey = "";
-try {
-  legacyKey = localStorage.getItem("haoni.lanyardKey") || sessionStorage.getItem("haoni.lanyardKey") || "";
-  localStorage.removeItem("haoni.lanyardKey");
-  sessionStorage.removeItem("haoni.lanyardKey");
-} catch {}
+// Older versions of the panel kept the Lanyard API key in this browser. It now
+// lives only on your login server, so wipe any old copy.
+try { localStorage.removeItem("haoni.lanyardKey"); sessionStorage.removeItem("haoni.lanyardKey"); } catch {}
 
 let saved = { settings: S.defaults(), bio: "", pronouns: "" };   // what's live on the site
 let draft = clone(saved);                                       // what's in the form
@@ -35,54 +29,32 @@ let discord = null;                                             // Discord user 
 let loaded = false, saving = false;
 
 /* =====================================================================
-   LOGIN
-   Your Lanyard API key is encrypted with your password (PBKDF2-SHA256,
-   600k rounds -> AES-256-GCM) and stored on Lanyard as KV "panel_lock".
-   Logging in downloads that and unlocks it: a wrong password can't
-   decrypt it, and without the key nothing can be saved.
+   LOGIN — with Discord, through your login server (worker/worker.js)
+   The server holds the Lanyard API key, checks that the Discord account
+   is yours, and only then saves. This page never sees the key; it only
+   gets a signed session token that the server can check (and that
+   "Log out everywhere" cancels).
    ===================================================================== */
-const LOCK_KEY = "panel_lock", PBKDF2_ITER = 600000, MIN_PW = 12;
-let lockStr = "";
+const AUTH = (S.AUTH_SERVER || "").replace(/\/+$/, "");
 const te = new TextEncoder(), td = new TextDecoder();
 const toB64 = (u8) => btoa(String.fromCharCode(...u8));
 const fromB64 = (str) => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+let lockStr = "";   // the old password lock, if it's still on Lanyard (removed after you log in)
 
-async function deriveAes(password, salt, iterations) {
-  const base = await crypto.subtle.importKey("raw", te.encode(password), "PBKDF2", false, ["deriveKey"]);
-  return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, base,
-    { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-}
-async function makeLock(apiKey, password) {
-  const salt = crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const aes = await deriveAes(password, salt, PBKDF2_ITER);
-  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, te.encode(apiKey)));
-  return JSON.stringify({ v: 1, kdf: "PBKDF2-SHA256", iter: PBKDF2_ITER, salt: toB64(salt), iv: toB64(iv), ct: toB64(ct) });
-}
-async function openLock(lock, password) {
-  const L = JSON.parse(lock);
-  if (!L || L.v !== 1 || !L.salt || !L.iv || !L.ct) throw new Error("bad lock");
-  const iter = Math.min(5000000, Math.max(100000, Number(L.iter) || PBKDF2_ITER));
-  const aes = await deriveAes(password, fromB64(L.salt), iter);
-  return td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(L.iv) }, aes, fromB64(L.ct)));
+function tokenInfo(token) {   // what's inside the server's token (name, expiry); the server does the real checking
+  try { return JSON.parse(td.decode(fromB64(token.split(".")[0].replace(/-/g, "+").replace(/_/g, "/")))); } catch { return {}; }
 }
 
 /* =====================================================================
    SESSION
-   After you log in, the API key lives in memory. To survive a reload (or
-   with "Stay logged in"), an ENCRYPTED copy goes in browser storage. The
-   key that unlocks it is a non-exportable browser key kept in IndexedDB,
-   so what F12 → Application shows is useless if copied anywhere else.
-   Logging out wipes both. Idle sessions lock after 30 minutes.
+   The session token lives in memory. To survive a reload (or with "Stay
+   logged in"), an ENCRYPTED copy goes in browser storage; the key that
+   unlocks it is a non-exportable browser key in IndexedDB, so what
+   F12 → Application shows is useless if copied anywhere else. Logging
+   out wipes both. Idle sessions lock after 30 minutes.
    ===================================================================== */
 const SESSION_NAME = "haoni.panelSession", IDLE_LIMIT = 30 * 60 * 1000;
-// "Log out everywhere" changes this value on Lanyard (KV "panel_epoch"). Every
-// session remembers the value it started under; when they differ, it logs out.
-const EPOCH_KEY = "panel_epoch";
-let epoch = "";
-const newEpoch = () => toB64(crypto.getRandomValues(new Uint8Array(12)));
-let memKey = "", stayLoggedIn = false, lastActive = Date.now();
-const getKey = () => memKey;
+let memToken = "", stayLoggedIn = false, lastActive = Date.now();
 
 function idbOpen() {
   return new Promise((resolve, reject) => {
@@ -110,13 +82,13 @@ async function deviceKey(create) {
   }
   return k;
 }
-async function startSession(key, remember) {
-  memKey = key; stayLoggedIn = remember; lastActive = Date.now();
+async function startSession(token, remember) {
+  memToken = token; stayLoggedIn = remember; lastActive = Date.now();
   try {
     const dk = await deviceKey(true);
     const iv = crypto.getRandomValues(new Uint8Array(12));
-    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, dk, te.encode(key)));
-    const sealed = JSON.stringify({ iv: toB64(iv), ct: toB64(ct), epoch });
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, dk, te.encode(token)));
+    const sealed = JSON.stringify({ iv: toB64(iv), ct: toB64(ct) });
     (remember ? localStorage : sessionStorage).setItem(SESSION_NAME, sealed);
     (remember ? sessionStorage : localStorage).removeItem(SESSION_NAME);
   } catch {}   // storage blocked: stay logged in for this page only
@@ -127,17 +99,19 @@ async function resumeSession() {
     if (!tab && !kept) return false;
     const dk = await deviceKey(false);
     const sealed = JSON.parse(tab || kept);
-    memKey = td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(sealed.iv) }, dk, fromB64(sealed.ct)));
+    const token = td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(sealed.iv) }, dk, fromB64(sealed.ct)));
+    if (!(tokenInfo(token).exp > Date.now())) throw new Error("expired");
+    memToken = token;
     stayLoggedIn = !tab;
     lastActive = Date.now();
-    return sealed.epoch || "";
+    return true;
   } catch {
-    memKey = "";
+    await endSession();
     return false;
   }
 }
 async function endSession() {
-  memKey = ""; stayLoggedIn = false;
+  memToken = ""; stayLoggedIn = false;
   try { localStorage.removeItem(SESSION_NAME); sessionStorage.removeItem(SESSION_NAME); } catch {}
   try { await idb("readwrite", st => st.delete("device")); } catch {}
 }
@@ -145,108 +119,96 @@ for (const ev of ["pointerdown", "keydown", "wheel", "touchstart"]) {
   addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true });
 }
 setInterval(async () => {
-  if (memKey && !stayLoggedIn && Date.now() - lastActive > IDLE_LIMIT) {
+  if (memToken && !stayLoggedIn && Date.now() - lastActive > IDLE_LIMIT) {
     await endSession();
-    showGate(lockStr ? "login" : "setup");
+    showGate("login");
     toast("Logged out after 30 minutes without activity. Your unsaved changes are still here.");
   }
 }, 30000);
 
-function showGate(mode, message) {   // "loading" | "login" | "setup" | "reset" | "error"
+/* ---------- talking to the login server ---------- */
+async function api(path, body) {
+  let r;
+  try {
+    r = await fetch(AUTH + path, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${memToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body || {}),
+    });
+  } catch {
+    throw new Error("Couldn't reach your login server. Check your internet connection and try again.");
+  }
+  let j = {};
+  try { j = await r.json(); } catch {}
+  if (r.status === 401) {
+    await endSession();
+    showGate("login", j.message || "Your login has expired. Log in again.");
+    throw Object.assign(new Error(j.message || "You've been logged out."), { loggedOut: true });
+  }
+  if (!r.ok || !j.ok) throw new Error(j.message || `Your login server returned an error (${r.status}).`);
+  return j;
+}
+// still logged in? (checked every minute, when this tab comes back, and before saving)
+async function checkSession() {
+  if (!memToken || !loaded) return true;
+  try { await api("/me"); return true; } catch (e) { return !e.loggedOut; }
+}
+setInterval(checkSession, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkSession(); });
+
+/* ---------- login screen ---------- */
+function showGate(mode, message) {   // "loading" | "login" | "notset" | "error"
   document.body.classList.add("locked");
   $("gate").hidden = false;
-  $("login-form").hidden = mode !== "login";
-  $("setup-form").hidden = !(mode === "setup" || mode === "reset");
+  $("login-box").hidden = mode !== "login";
+  $("notset-box").hidden = mode !== "notset";
   $("gate-error").hidden = mode !== "error";
-  $("to-login").hidden = mode !== "reset";
-  $("setup-btn").textContent = mode === "reset" ? "Reset password" : "Create password";
   $("gate-sub").textContent = {
     loading: "Loading…",
-    login: "Enter your password to edit your site.",
-    setup: "Set a password to protect your panel.",
-    reset: "Reset your password with a fresh API key.",
+    login: "Log in with Discord to edit your site.",
+    notset: "Discord login isn't set up yet.",
     error: "Something went wrong.",
   }[mode];
   if (mode === "error") $("gate-error-text").textContent = message;
-  ["login-error", "setup-error"].forEach(id => { $(id).hidden = true; });
-  const first = { login: "login-pw", setup: legacyKey ? "setup-pw" : "setup-key", reset: "setup-key" }[mode];
-  if (mode === "setup" && legacyKey) $("setup-key").value = legacyKey;   // key saved by the old panel
-  if (first) setTimeout(() => $(first).focus(), 0);
+  $("login-error").hidden = !(mode === "login" && message);
+  if (mode === "login" && message) $("login-error").textContent = message;
+  if (mode === "login") setTimeout(() => $("discord-login").focus(), 0);
 }
 function hideGate() {
   document.body.classList.remove("locked");
   $("gate").hidden = true;
 }
-function formError(id, msg) { $(id).textContent = msg; $(id).hidden = false; }
-const WEAK = /password|passwort|qwerty|asdf|zxcv|letmein|welcome|iloveyou|admin|login|123456|abcdef|haoni|discord|lanyard|roblox/;
-function checkNewPassword(pw, pw2) {
-  if (pw.length < MIN_PW) return `Use at least ${MIN_PW} characters.`;
-  if (WEAK.test(pw.toLowerCase()) || new Set(pw.toLowerCase()).size < 6) {
-    return "That password is too easy to guess. Try a few random words, like purple-taco-rocket-lamp.";
-  }
-  if (pw !== pw2) return "The two passwords don't match.";
-  return "";
-}
-
-let fails = 0, waitUntil = 0;
-$("login-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const btn = $("login-btn"), pw = $("login-pw");
-  if (Date.now() < waitUntil) return;
-  btn.disabled = true; btn.textContent = "Checking…";
-  try {
-    const key = await openLock(lockStr, pw.value);
-    await startSession(key, $("login-stay").checked);
-    pw.value = ""; fails = 0;
-    hideGate();
-    toast("Logged in.");
-  } catch {
-    fails++;
-    const wait = fails >= 3 ? Math.min(30, 2 ** (fails - 2)) : 0;   // slow down guessing
-    waitUntil = Date.now() + wait * 1000;
-    formError("login-error", "Wrong password." + (wait ? ` Try again in ${wait}s.` : ""));
-    pw.select();
-    await new Promise(r => setTimeout(r, wait * 1000));
-  } finally {
-    btn.disabled = false; btn.textContent = "Log in";
-  }
+$("discord-login").prepend(S.discordIcon());
+$("discord-login").addEventListener("click", () => {
+  location.href = `${AUTH}/login${$("login-stay").checked ? "?stay=1" : ""}`;
 });
-
-$("setup-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const key = $("setup-key").value.trim(), pw = $("setup-pw").value, btn = $("setup-btn"), label = btn.textContent;
-  if (!key || /\s/.test(key)) return formError("setup-error", "Paste the API key the Lanyard bot sent you.");
-  const bad = checkNewPassword(pw, $("setup-pw2").value);
-  if (bad) return formError("setup-error", bad);
-  btn.disabled = true; btn.textContent = "Setting up…";
-  try {
-    const lock = await makeLock(key, pw), fresh = newEpoch();
-    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock, [EPOCH_KEY]: fresh }), key);   // Lanyard checks the key here
-    lockStr = lock;
-    epoch = fresh;
-    legacyKey = "";
-    await startSession(key, $("setup-stay").checked);
-    ["setup-key", "setup-pw", "setup-pw2"].forEach(id => { $(id).value = ""; });
-    hideGate();
-    toast("Password set. You're logged in.");
-  } catch (err) {
-    formError("setup-error", err.message);
-  } finally {
-    btn.disabled = false; btn.textContent = label;
-  }
-});
-// clear an old error message as soon as you start typing again
-for (const [form, err] of [["login-form", "login-error"], ["setup-form", "setup-error"], ["chpw-form", "chpw-error"]]) {
-  $(form).addEventListener("input", () => { $(err).hidden = true; });
-}
-$("to-reset").addEventListener("click", () => showGate("reset"));
-$("to-login").addEventListener("click", () => showGate("login"));
 $("gate-retry").addEventListener("click", () => load());
+
+// coming back from Discord: the server puts the result after "#" in the address
+let loginResult = "";
+async function takeLoginFromAddress() {
+  const h = new URLSearchParams(location.hash.slice(1));
+  if (!h.has("session") && !h.has("login_error")) return;
+  history.replaceState(null, "", location.pathname + location.search);   // don't leave it in the address bar
+  if (h.get("login_error")) { loginResult = h.get("login_error"); return; }
+  const token = h.get("session");
+  await startSession(token, !!tokenInfo(token).stay);
+  loginResult = "ok";
+}
+function loginErrorText(code) {
+  const who = discord ? `@${discord.username}` : "the site owner";
+  return {
+    wrong_account: `That Discord account can't edit this site. Log in as ${who}.`,
+    cancelled: "Discord login was cancelled.",
+    expired: "That login took too long. Try again.",
+    failed: "Discord login didn't work. Try again.",
+  }[code] || "";
+}
 
 $("logout-btn").addEventListener("click", async () => {
   if (isDirty() && !confirm("You have unsaved changes. Log out anyway?")) return;
   await endSession();
-  showGate(lockStr ? "login" : "setup");
+  showGate("login");
 });
 $("logout-all-btn").addEventListener("click", async () => {
   if (!confirm("Log out of the control panel on every device, including this one?")) return;
@@ -254,61 +216,14 @@ $("logout-all-btn").addEventListener("click", async () => {
   const btn = $("logout-all-btn");
   btn.disabled = true;
   try {
-    const fresh = newEpoch();
-    await lanyard("PATCH", "/kv", JSON.stringify({ [EPOCH_KEY]: fresh }));
-    epoch = fresh;
+    await api("/logout-all");
     await endSession();
     showGate("login");
     toast("Logged out on every device.");
   } catch (err) {
-    toast(err.message, "error");
+    if (!err.loggedOut) toast(err.message, "error");
   } finally {
     btn.disabled = false;
-  }
-});
-// check now and then (and whenever this tab comes back) whether we've been logged out elsewhere
-async function checkEpoch() {
-  if (!memKey || !loaded) return true;
-  try {
-    const j = await (await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}`)).json();
-    const current = (j.success && j.data.kv && j.data.kv[EPOCH_KEY]) || "";
-    if (current === epoch) return true;
-    epoch = current;
-    await endSession();
-    showGate("login");
-    toast("You were logged out from another device.");
-    return false;
-  } catch { return true; }   // offline: try again later
-}
-setInterval(checkEpoch, 60000);
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkEpoch(); });
-$("chpw-toggle").addEventListener("click", () => {
-  const f = $("chpw-form");
-  f.hidden = !f.hidden;
-  $("chpw-toggle").setAttribute("aria-expanded", String(!f.hidden));
-  if (!f.hidden) $("chpw-1").focus();
-});
-$("chpw-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const pw = $("chpw-1").value, btn = $("chpw-btn");
-  const bad = checkNewPassword(pw, $("chpw-2").value);
-  if (bad) return formError("chpw-error", bad);
-  $("chpw-error").hidden = true;
-  btn.disabled = true; btn.textContent = "Saving…";
-  try {
-    const lock = await makeLock(getKey(), pw), fresh = newEpoch();
-    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock, [EPOCH_KEY]: fresh }));
-    lockStr = lock;
-    epoch = fresh;
-    await startSession(getKey(), stayLoggedIn);   // keep this device logged in
-    $("chpw-1").value = $("chpw-2").value = "";
-    $("chpw-form").hidden = true;
-    $("chpw-toggle").setAttribute("aria-expanded", "false");
-    toast("Password changed. Other devices have been logged out.");
-  } catch (err) {
-    formError("chpw-error", err.message);
-  } finally {
-    btn.disabled = false; btn.textContent = "Save new password";
   }
 });
 
@@ -528,30 +443,10 @@ function sendPreview(now) {
   }, now ? 0 : 60);
 }
 
-async function lanyard(method, path, body, key = getKey()) {
-  let r;
-  try {
-    r = await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}${path}`, {
-      method,
-      headers: Object.assign({ Authorization: key }, body ? { "Content-Type": "application/json" } : {}),
-      body,
-    });
-  } catch {
-    throw new Error("Couldn't reach Lanyard. Check your internet connection and try again.");
-  }
-  if (r.ok) return;
-  let msg = "";
-  try { const j = await r.json(); msg = j && j.error && j.error.message; } catch {}
-  if (r.status === 401 || r.status === 403) {
-    throw new Error("Lanyard didn't accept that API key. Get a fresh one by DMing the Lanyard bot .apikey (if you were logged in, log out and use “Forgot password?”).");
-  }
-  throw new Error(msg ? `Lanyard said: ${msg}` : `Lanyard returned an error (${r.status}).`);
-}
-
 async function save() {
-  if (memKey && !(await checkEpoch())) return;
+  if (memToken && !(await checkSession())) return;
   if (!loaded || saving || !isDirty()) return;
-  if (!getKey()) { showGate(lockStr ? "login" : "setup"); return; }
+  if (!memToken) { showGate("login"); return; }
   const settings = S.sanitize(draft.settings);
   const site = JSON.stringify(settings);
   const bio = draft.bio.trim().slice(0, S.LIMITS.bio);
@@ -562,13 +457,10 @@ async function save() {
   $("save-btn").disabled = true;
   setState("saving", "Saving…");
   try {
-    const body = { site };
-    if (bio) body.bio = bio;
-    if (pronouns) body.pronouns = pronouns;
-    await lanyard("PATCH", "/kv", JSON.stringify(body));
-    // empty fields: remove the key instead of saving an empty value
-    if (!bio && saved.bio) await lanyard("DELETE", "/kv/bio");
-    if (!pronouns && saved.pronouns) await lanyard("DELETE", "/kv/pronouns");
+    const set = { site }, del = [];
+    if (bio) set.bio = bio; else if (saved.bio) del.push("bio");               // empty: remove it
+    if (pronouns) set.pronouns = pronouns; else if (saved.pronouns) del.push("pronouns");
+    await api("/save", { set, del });
     saved = { settings, bio, pronouns };
     draft = clone(saved);
     saving = false;
@@ -581,7 +473,7 @@ async function save() {
     saving = false;
     setState("error", "Couldn't save");
     $("save-btn").disabled = false;
-    toast(err.message, "error");
+    toast(err.loggedOut ? "You're logged out, so nothing was saved. Log in and press Save again." : err.message, "error");
   }
 }
 $("save-btn").addEventListener("click", save);
@@ -599,7 +491,8 @@ async function load() {
   notice.textContent = "Loading your current settings from Lanyard…";
   notice.hidden = false;
   setState("loading", "Loading…");
-  const resumed = resumeSession();   // unlock a saved session while the data loads
+  await takeLoginFromAddress();
+  const resumed = memToken ? Promise.resolve(true) : resumeSession();   // unlock a saved session while the data loads
   try {
     const r = await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}`);
     const j = await r.json();
@@ -611,13 +504,16 @@ async function load() {
     }
     discord = j.data.discord_user;
     const kv = j.data.kv || {};
-    lockStr = kv[LOCK_KEY] || "";
-    epoch = kv[EPOCH_KEY] || "";
-    const sessionEpoch = await resumed;       // false = no saved session
-    if (sessionEpoch !== false && sessionEpoch !== epoch) await endSession();   // logged out everywhere since
-    if (!lockStr) showGate("setup");          // first time: create a password
-    else if (memKey) hideGate();              // still logged in on this device
-    else showGate("login");
+    lockStr = kv.panel_lock || "";
+    await resumed;
+    if (!AUTH) showGate("notset");
+    else if (memToken) {
+      hideGate();
+      if (loginResult === "ok") toast("Logged in with Discord.");
+      // the old password lock still holds an encrypted copy of the API key: remove it
+      if (lockStr) api("/save", { set: {}, del: ["panel_lock"] }).then(() => { lockStr = ""; }).catch(() => {});
+    }
+    else showGate("login", loginErrorText(loginResult));
     saved = { settings: S.sanitize(kv.site), bio: kv.bio || "", pronouns: kv.pronouns || "" };
     draft = clone(saved);
     loaded = true;
