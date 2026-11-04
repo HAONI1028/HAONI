@@ -938,7 +938,8 @@ function renderPresence() {
       if (a.application_id) appIcon(a.application_id, ph);
     }
     if (small) art.append(el("img", { className: "small", src: small, alt: "", title: (a.assets && a.assets.small_text) || "" }));
-    const isStream = a.type === 1 && a.url;
+    const streamUrl = a.type === 1 ? S.safeUrl(a.url || "") : "";
+    const isStream = !!streamUrl;
     const card = el(isStream ? "a" : "div", { className: "activity" },
       art,
       el("div", { className: "body" },
@@ -948,7 +949,7 @@ function renderPresence() {
         a.state ? el("div", { className: "detail", textContent: a.state }) : null,
         a.timestamps && a.timestamps.start ? el("div", { className: "time" }) : null
       ));
-    if (isStream) Object.assign(card, { href: a.url, target: "_blank", rel: "noopener" });
+    if (isStream) Object.assign(card, { href: streamUrl, target: "_blank", rel: "noopener" });
     if (a.timestamps && a.timestamps.start) card.dataset.start = a.timestamps.start;
     cards.push(card);
   }

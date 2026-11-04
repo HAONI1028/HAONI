@@ -28,6 +28,18 @@ is public, so a short one could be guessed offline.
 Pressing **Save & publish** writes the settings to Lanyard KV, and every open copy of the site
 updates instantly. Use **Export settings** for a backup.
 
+## Security
+- **No secrets are stored in this repo.** The only secret is your Lanyard API key, and it only
+  exists encrypted (in Lanyard KV, `panel_lock`) or in your own browser after you log in. It can
+  only change this site's Lanyard data; it can't access your Discord account.
+- **If the key ever leaks:** DM the Lanyard bot `.apikey` — that makes a new key and the old one
+  stops working. Then open the panel, click **Forgot password?**, and set it up with the new key.
+  (Every `.apikey` replaces the key, so do this whenever you run it.)
+- **Stay logged in** keeps the key in that browser, so only use it on your own device.
+- **Use a long, unique password** — anyone can download the encrypted key and try guesses offline.
+- **Turn on two-factor authentication for your GitHub account**: anyone who can push to this
+  repo could change the panel's code.
+
 ## Changing the bio from Discord
 The bio and pronouns can also be set by DMing the Lanyard bot:
 
