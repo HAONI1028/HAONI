@@ -285,8 +285,29 @@
   /* ---------- connect ---------- */
   .steps{margin:12px 0 0;padding-left:20px;color:var(--muted);font-size:13.5px}
   .steps li + li{margin-top:4px}
-  .key-row{display:flex;gap:8px;margin-top:12px}
-  .key-row input{flex:1}
+  /* ---------- login screen ---------- */
+  body.locked{overflow:hidden}
+  .gate{
+    position:fixed;inset:0;z-index:100;overflow:auto;
+    display:grid;place-items:center;padding:24px 16px;
+    background:radial-gradient(700px 400px at 50% -10%, var(--accent-soft), transparent 70%), var(--bg);
+  }
+  .gate-card{
+    width:min(400px,100%);display:grid;gap:10px;
+    padding:28px 24px;border-radius:18px;border:1px solid var(--line);background:var(--card);
+    box-shadow:0 24px 60px rgba(0,0,0,.35);
+  }
+  .gate-head{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .gate-avatar{width:48px;height:48px;border-radius:50%;background:var(--card-2);object-fit:cover}
+  .gate h1{margin:0;font-family:'Space Grotesk',sans-serif;font-size:20px;line-height:1.2}
+  .gate-sub{margin:2px 0 0;color:var(--muted);font-size:13.5px}
+  .gate form{display:grid;gap:8px}
+  .gate label:not(.check){font-weight:600;font-size:13px;margin-top:4px}
+  .gate .check{margin-top:2px}
+  .btn.wide{width:100%;height:40px;margin-top:6px}
+  .linkish{justify-self:center;border:0;background:none;color:var(--accent-text);font-weight:600;font-size:13px;cursor:pointer;padding:4px}
+  .linkish:hover{text-decoration:underline}
+  .chpw{margin-top:4px}
   .check{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--muted);cursor:pointer}
   .check input{accent-color:var(--accent);width:16px;height:16px;margin:0}
   .ok-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-weight:600;color:var(--ok-text)}
@@ -354,7 +375,53 @@
   }
 </style>
 </head>
-<body>
+<body class="locked">
+<div class="gate" id="gate" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+  <div class="gate-card">
+    <div class="gate-head">
+      <img class="gate-avatar" id="gate-avatar" alt="" src="https://cdn.discordapp.com/avatars/955378599412764722/4544384a53cc2459cbefc546aec48267.png?size=96">
+      <div>
+        <h1 id="gate-title">Control Panel</h1>
+        <p class="gate-sub" id="gate-sub">Loading…</p>
+      </div>
+    </div>
+
+    <form id="login-form" hidden>
+      <input type="text" name="username" autocomplete="username" value="haoni1028" hidden>
+      <label for="login-pw">Password</label>
+      <input type="password" id="login-pw" autocomplete="current-password" required>
+      <label class="check"><input type="checkbox" id="login-stay"> Stay logged in on this device</label>
+      <p class="hint error" id="login-error" role="alert" hidden></p>
+      <button class="btn primary wide" type="submit" id="login-btn">Log in</button>
+      <button type="button" class="linkish" id="to-reset">Forgot password?</button>
+    </form>
+
+    <form id="setup-form" hidden>
+      <input type="text" name="username" autocomplete="username" value="haoni1028" hidden>
+      <ol class="steps" style="margin:0">
+        <li>On Discord, DM the Lanyard bot <code>.apikey</code></li>
+        <li>Paste the key it sends you, then choose a password.</li>
+      </ol>
+      <label for="setup-key">Lanyard API key</label>
+      <input type="password" id="setup-key" autocomplete="off" spellcheck="false" required>
+      <label for="setup-pw">New password</label>
+      <input type="password" id="setup-pw" autocomplete="new-password" minlength="10" required>
+      <label for="setup-pw2">Type it again</label>
+      <input type="password" id="setup-pw2" autocomplete="new-password" required>
+      <p class="hint">At least 10 characters. A few random words, like <code>purple-taco-rocket-lamp</code>, work well.</p>
+      <label class="check"><input type="checkbox" id="setup-stay"> Stay logged in on this device</label>
+      <p class="hint error" id="setup-error" role="alert" hidden></p>
+      <button class="btn primary wide" type="submit" id="setup-btn">Create password</button>
+      <button type="button" class="linkish" id="to-login" hidden>Back to log in</button>
+    </form>
+
+    <div id="gate-error" hidden>
+      <p class="notice error" id="gate-error-text" style="margin:0 0 10px"></p>
+      <button type="button" class="btn wide" id="gate-retry">Try again</button>
+    </div>
+  </div>
+</div>
+
 <header class="topbar">
   <div class="brand">
     <img class="me-avatar" id="me-avatar" alt="" src="https://cdn.discordapp.com/avatars/955378599412764722/4544384a53cc2459cbefc546aec48267.png?size=64">
@@ -378,7 +445,7 @@
 <main class="layout" id="layout" data-view="edit">
   <div class="editor">
     <nav class="jump" aria-label="Sections">
-      <a href="#g-connect">Connect</a>
+      <a href="#g-account">Account</a>
       <a href="#g-profile">Profile</a>
       <a href="#g-links">Links</a>
       <a href="#g-name">Name style</a>
@@ -388,28 +455,25 @@
       <a href="#g-advanced">Advanced</a>
     </nav>
 
-    <!-- Connect -->
-    <section class="group" id="g-connect" aria-labelledby="h-connect">
+    <!-- Account -->
+    <section class="group" id="g-account" aria-labelledby="h-account">
       <div class="group-head">
-        <h2 id="h-connect">Connect</h2>
-        <p>Your settings are saved to Lanyard, and your site picks up changes instantly. Saving needs your Lanyard API key.</p>
+        <h2 id="h-account">Account</h2>
+        <p>You're logged in. Your password unlocks your Lanyard API key, which is kept encrypted on Lanyard, so you can log in from any device.</p>
       </div>
-      <div id="key-missing">
-        <ol class="steps">
-          <li>On Discord, send the Lanyard bot a DM saying <code>.apikey</code></li>
-          <li>Paste the key it sends back here. It stays on this device and is only ever sent to Lanyard. Don't share it: anyone with it can change your site.</li>
-        </ol>
-        <form class="key-row" id="key-form" autocomplete="off">
-          <input type="password" id="key-input" placeholder="Paste your Lanyard API key" spellcheck="false" aria-label="Lanyard API key">
-          <button type="submit" class="btn">Use key</button>
-        </form>
-        <label class="check"><input type="checkbox" id="key-remember" checked> Remember on this device</label>
+      <div class="row wrap">
+        <button type="button" class="btn" id="logout-btn">Log out</button>
+        <button type="button" class="btn" id="chpw-toggle" aria-expanded="false" aria-controls="chpw-form">Change password</button>
       </div>
-      <div id="key-present" hidden>
-        <div class="ok-line">✓ API key added <span class="hint" id="key-where"></span>
-          <button type="button" class="btn small" id="key-forget">Forget key</button>
+      <form id="chpw-form" class="chpw" hidden>
+        <input type="text" name="username" autocomplete="username" value="haoni1028" hidden>
+        <div class="grid-2">
+          <div class="field"><label for="chpw-1">New password</label><input type="password" id="chpw-1" autocomplete="new-password" minlength="10" required></div>
+          <div class="field"><label for="chpw-2">Type it again</label><input type="password" id="chpw-2" autocomplete="new-password" required></div>
         </div>
-      </div>
+        <p class="hint error" id="chpw-error" role="alert" hidden style="margin-top:8px"></p>
+        <div class="row"><button class="btn primary" type="submit" id="chpw-btn">Save new password</button></div>
+      </form>
       <p class="notice" id="load-notice">Loading your current settings from Lanyard…</p>
     </section>
 
@@ -671,24 +735,152 @@ function forgetKey() {
   memKey = "";
   try { localStorage.removeItem(KEY_NAME); sessionStorage.removeItem(KEY_NAME); } catch {}
 }
-function renderKeyState() {
-  const has = !!getKey();
-  $("key-missing").hidden = has;
-  $("key-present").hidden = !has;
-  let remembered = false;
-  try { remembered = !!localStorage.getItem(KEY_NAME); } catch {}
-  $("key-where").textContent = remembered ? "(remembered on this device)" : "(until you close this tab)";
+/* =====================================================================
+   LOGIN
+   Your Lanyard API key is encrypted with your password (PBKDF2-SHA256,
+   600k rounds -> AES-256-GCM) and stored on Lanyard as KV "panel_lock".
+   Logging in downloads that and unlocks it: a wrong password can't
+   decrypt it, and without the key nothing can be saved.
+   ===================================================================== */
+const LOCK_KEY = "panel_lock", PBKDF2_ITER = 600000, MIN_PW = 10;
+let lockStr = "";
+const te = new TextEncoder(), td = new TextDecoder();
+const toB64 = (u8) => btoa(String.fromCharCode(...u8));
+const fromB64 = (str) => Uint8Array.from(atob(str), c => c.charCodeAt(0));
+
+async function deriveAes(password, salt, iterations) {
+  const base = await crypto.subtle.importKey("raw", te.encode(password), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, base,
+    { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
 }
-$("key-form").addEventListener("submit", (e) => {
+async function makeLock(apiKey, password) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const aes = await deriveAes(password, salt, PBKDF2_ITER);
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aes, te.encode(apiKey)));
+  return JSON.stringify({ v: 1, kdf: "PBKDF2-SHA256", iter: PBKDF2_ITER, salt: toB64(salt), iv: toB64(iv), ct: toB64(ct) });
+}
+async function openLock(lock, password) {
+  const L = JSON.parse(lock);
+  if (!L || L.v !== 1 || !L.salt || !L.iv || !L.ct) throw new Error("bad lock");
+  const iter = Math.min(5000000, Math.max(100000, Number(L.iter) || PBKDF2_ITER));
+  const aes = await deriveAes(password, fromB64(L.salt), iter);
+  return td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(L.iv) }, aes, fromB64(L.ct)));
+}
+
+function showGate(mode, message) {   // "loading" | "login" | "setup" | "reset" | "error"
+  document.body.classList.add("locked");
+  $("gate").hidden = false;
+  $("login-form").hidden = mode !== "login";
+  $("setup-form").hidden = !(mode === "setup" || mode === "reset");
+  $("gate-error").hidden = mode !== "error";
+  $("to-login").hidden = mode !== "reset";
+  $("setup-btn").textContent = mode === "reset" ? "Reset password" : "Create password";
+  $("gate-sub").textContent = {
+    loading: "Loading…",
+    login: "Enter your password to edit your site.",
+    setup: "Set a password to protect your panel.",
+    reset: "Reset your password with a fresh API key.",
+    error: "Something went wrong.",
+  }[mode];
+  if (mode === "error") $("gate-error-text").textContent = message;
+  ["login-error", "setup-error"].forEach(id => { $(id).hidden = true; });
+  const first = { login: "login-pw", setup: getKey() ? "setup-pw" : "setup-key", reset: "setup-key" }[mode];
+  if (mode === "setup" && getKey()) $("setup-key").value = getKey();   // key saved by the old panel
+  if (first) setTimeout(() => $(first).focus(), 0);
+}
+function hideGate() {
+  document.body.classList.remove("locked");
+  $("gate").hidden = true;
+}
+function formError(id, msg) { $(id).textContent = msg; $(id).hidden = false; }
+function checkNewPassword(pw, pw2) {
+  if (pw.length < MIN_PW) return `Use at least ${MIN_PW} characters.`;
+  if (pw !== pw2) return "The two passwords don't match.";
+  return "";
+}
+
+let fails = 0, waitUntil = 0;
+$("login-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const k = $("key-input").value.trim();
-  if (!k || /\s/.test(k)) { toast("That doesn't look like an API key.", "error"); return; }
-  setKey(k, $("key-remember").checked);
-  $("key-input").value = "";
-  renderKeyState();
-  toast("Key added. It gets checked the first time you save.");
+  const btn = $("login-btn"), pw = $("login-pw");
+  if (Date.now() < waitUntil) return;
+  btn.disabled = true; btn.textContent = "Checking…";
+  try {
+    const key = await openLock(lockStr, pw.value);
+    setKey(key, $("login-stay").checked);
+    pw.value = ""; fails = 0;
+    hideGate();
+    toast("Logged in.");
+  } catch {
+    fails++;
+    const wait = fails >= 3 ? Math.min(30, 2 ** (fails - 2)) : 0;   // slow down guessing
+    waitUntil = Date.now() + wait * 1000;
+    formError("login-error", "Wrong password." + (wait ? ` Try again in ${wait}s.` : ""));
+    pw.select();
+    await new Promise(r => setTimeout(r, wait * 1000));
+  } finally {
+    btn.disabled = false; btn.textContent = "Log in";
+  }
 });
-$("key-forget").addEventListener("click", () => { forgetKey(); renderKeyState(); toast("Key removed from this device."); });
+
+$("setup-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const key = $("setup-key").value.trim(), pw = $("setup-pw").value, btn = $("setup-btn"), label = btn.textContent;
+  if (!key || /\s/.test(key)) return formError("setup-error", "Paste the API key the Lanyard bot sent you.");
+  const bad = checkNewPassword(pw, $("setup-pw2").value);
+  if (bad) return formError("setup-error", bad);
+  btn.disabled = true; btn.textContent = "Setting up…";
+  try {
+    const lock = await makeLock(key, pw);
+    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock }), key);   // Lanyard checks the key here
+    lockStr = lock;
+    setKey(key, $("setup-stay").checked);
+    ["setup-key", "setup-pw", "setup-pw2"].forEach(id => { $(id).value = ""; });
+    hideGate();
+    toast("Password set. You're logged in.");
+  } catch (err) {
+    formError("setup-error", err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+});
+$("to-reset").addEventListener("click", () => showGate("reset"));
+$("to-login").addEventListener("click", () => showGate("login"));
+$("gate-retry").addEventListener("click", () => load());
+
+$("logout-btn").addEventListener("click", () => {
+  if (isDirty() && !confirm("You have unsaved changes. Log out anyway?")) return;
+  forgetKey();
+  showGate(lockStr ? "login" : "setup");
+});
+$("chpw-toggle").addEventListener("click", () => {
+  const f = $("chpw-form");
+  f.hidden = !f.hidden;
+  $("chpw-toggle").setAttribute("aria-expanded", String(!f.hidden));
+  if (!f.hidden) $("chpw-1").focus();
+});
+$("chpw-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const pw = $("chpw-1").value, btn = $("chpw-btn");
+  const bad = checkNewPassword(pw, $("chpw-2").value);
+  if (bad) return formError("chpw-error", bad);
+  $("chpw-error").hidden = true;
+  btn.disabled = true; btn.textContent = "Saving…";
+  try {
+    const lock = await makeLock(getKey(), pw);
+    await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock }));
+    lockStr = lock;
+    $("chpw-1").value = $("chpw-2").value = "";
+    $("chpw-form").hidden = true;
+    $("chpw-toggle").setAttribute("aria-expanded", "false");
+    toast("Password changed.");
+  } catch (err) {
+    formError("chpw-error", err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = "Save new password";
+  }
+});
 
 /* =====================================================================
    BUILD THE FORM
@@ -906,8 +1098,7 @@ function sendPreview(now) {
   }, now ? 0 : 60);
 }
 
-async function lanyard(method, path, body) {
-  const key = getKey();
+async function lanyard(method, path, body, key = getKey()) {
   let r;
   try {
     r = await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}${path}`, {
@@ -922,20 +1113,14 @@ async function lanyard(method, path, body) {
   let msg = "";
   try { const j = await r.json(); msg = j && j.error && j.error.message; } catch {}
   if (r.status === 401 || r.status === 403) {
-    throw new Error("Lanyard didn't accept your API key. DM the Lanyard bot .apikey on Discord to get a fresh one.");
+    throw new Error("Lanyard didn't accept that API key. Get a fresh one by DMing the Lanyard bot .apikey (if you were logged in, log out and use “Forgot password?”).");
   }
   throw new Error(msg ? `Lanyard said: ${msg}` : `Lanyard returned an error (${r.status}).`);
 }
 
 async function save() {
   if (!loaded || saving || !isDirty()) return;
-  if (!getKey()) {
-    $("g-connect").scrollIntoView({ behavior: "smooth", block: "start" });
-    showView("edit");
-    $("key-input").focus({ preventScroll: true });
-    toast("Add your Lanyard API key first.", "error");
-    return;
-  }
+  if (!getKey()) { showGate(lockStr ? "login" : "setup"); return; }
   const settings = S.sanitize(draft.settings);
   const site = JSON.stringify(settings);
   const bio = draft.bio.trim().slice(0, S.LIMITS.bio);
@@ -994,6 +1179,10 @@ async function load() {
     }
     discord = j.data.discord_user;
     const kv = j.data.kv || {};
+    lockStr = kv[LOCK_KEY] || "";
+    if (!lockStr) showGate("setup");          // first time: create a password
+    else if (getKey()) hideGate();            // still logged in on this device
+    else showGate("login");
     saved = { settings: S.sanitize(kv.site), bio: kv.bio || "", pronouns: kv.pronouns || "" };
     draft = clone(saved);
     loaded = true;
@@ -1004,10 +1193,10 @@ async function load() {
     setState("clean", "All changes saved");
     sendPreview(true);
   } catch (err) {
+    const msg = err instanceof TypeError ? "Couldn't reach Lanyard. Check your internet connection." : err.message;
     notice.className = "notice error";
-    notice.replaceChildren(
-      (err instanceof TypeError ? "Couldn't reach Lanyard. Check your internet connection." : err.message) + " ",
-      el("button", { type: "button", className: "btn small", textContent: "Try again", onclick: load }));
+    notice.textContent = msg;
+    showGate("error", msg);
     setState("error", "Not loaded");
   }
 }
@@ -1018,6 +1207,7 @@ function showIdentity() {
   if (discord.avatar) {
     const url = `https://cdn.discordapp.com/avatars/${discord.id}/${discord.avatar}.png?size=64`;
     $("me-avatar").src = url;
+    $("gate-avatar").src = url.replace("size=64", "size=96");
     $("favicon").href = url;
   }
   $("f-displayName").placeholder = name;
@@ -1199,7 +1389,7 @@ function toast(msg, kind = "ok") {
 }
 
 /* ---------- go ---------- */
-renderKeyState();
+showGate("loading");
 fillForm();
 load();
 </script>

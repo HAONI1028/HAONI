@@ -17,9 +17,13 @@ automatic icons), name font / effect / size / colours, background particles, cur
 3D tilt, typewriter bio, theme, accent colour, glass card, page background, show/hide for every
 part of the page, and custom CSS. A live preview shows changes before you publish.
 
-**First time:** DM the Lanyard bot `.apikey` on Discord and paste the key into the panel's
-Connect section. The key stays in your browser and is only sent to Lanyard; anyone with it can
-change your site, so don't share it.
+**Login:** the panel is password-protected. The first time you open it, DM the Lanyard bot
+`.apikey` on Discord, paste the key, and choose a password. The panel encrypts the API key with
+your password (PBKDF2 + AES-256-GCM) and stores only the encrypted copy on Lanyard (KV key
+`panel_lock`). Logging in downloads that copy and unlocks it, so a wrong password can't unlock
+it, and without the key nothing can be saved. It works from any device. Forgot the password?
+Use **Forgot password?** with a fresh key from `.apikey`. Use a long password: the encrypted copy
+is public, so a short one could be guessed offline.
 
 Pressing **Save & publish** writes the settings to Lanyard KV, and every open copy of the site
 updates instantly. Use **Export settings** for a backup.
