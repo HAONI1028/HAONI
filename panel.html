@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/markdown.css?v=4">
 <style>
   :root{
     --bg:#0E0F13;
@@ -57,7 +58,7 @@
   }
   [hidden]{display:none !important}
   a{color:inherit}
-  button,input,textarea{font:inherit;color:inherit}
+  button,input,textarea,select{font:inherit;color:inherit}
   code{
     font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
     background:var(--card-2);border:1px solid var(--line);padding:1px 5px;border-radius:5px;
@@ -141,7 +142,7 @@
   fieldset{border:0;margin:0;padding:0;min-width:0}
   fieldset:disabled{opacity:.5;pointer-events:none}
 
-  .field{display:grid;gap:7px;margin-top:16px;min-width:0}
+  .field{display:grid;grid-template-columns:minmax(0,1fr);gap:7px;margin-top:16px;min-width:0}
   .field > label,.flabel{font-weight:600;font-size:13px}
   .label-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
   .label-row label{font-weight:600;font-size:13px}
@@ -162,6 +163,41 @@
     outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
   }
   ::placeholder{color:var(--faint)}
+  select,input[type="datetime-local"]{
+    min-width:0;max-width:100%;height:34px;padding:0 10px;border-radius:9px;
+    border:1px solid var(--line-2);background:var(--card);font-size:13.5px;
+  }
+  select:focus,input[type="datetime-local"]:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+
+  /* ---------- About Me editor ---------- */
+  .md-editor{display:grid}
+  .md-toolbar{
+    display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:4px;
+    border:1px solid var(--line-2);border-bottom:0;border-radius:10px 10px 0 0;background:var(--card-2);
+  }
+  .md-editor textarea{border-radius:0 0 10px 10px;min-height:120px}
+  .tb{
+    min-width:32px;height:30px;padding:0 9px;border-radius:7px;border:0;background:transparent;
+    font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;
+  }
+  .tb:hover{background:var(--line);color:var(--ink)}
+  .tb b,.tb i,.tb u,.tb s{font-size:15px;color:var(--ink);font-family:Georgia,'Times New Roman',serif}
+  .tb-sep{width:1px;height:18px;margin:0 4px;background:var(--line-2)}
+  .md-help{border:1px solid var(--line);border-radius:12px;background:var(--card-2)}
+  .md-help summary{padding:10px 14px;cursor:pointer;font-weight:600;font-size:13px}
+  .md-help[open] summary{border-bottom:1px solid var(--line)}
+  .md-help-body{padding:12px 14px;display:grid;gap:16px}
+  .md-help-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px 14px;align-items:center;font-size:14px}
+  .md-help-grid .h{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+  .md-help-grid .src{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px;
+    white-space:pre-wrap;overflow-wrap:anywhere;padding:6px 8px;border-radius:8px;
+    background:var(--card);border:1px solid var(--line);
+  }
+  .md-help-grid .out{min-width:0}
+  .ts-maker{display:grid;gap:6px}
+  #ts-date{flex:1 1 180px}
+  #ts-style{flex:1 1 220px;width:0}
 
   /* ---------- option pills ---------- */
   .chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -405,8 +441,41 @@
         <p class="hint" style="margin-top:8px">The “Copy username” button always copies your real Discord username.</p>
         <div class="field">
           <div class="label-row"><label for="f-bio">About Me</label><span class="count" data-count-for="f-bio"></span></div>
-          <textarea id="f-bio" data-kv="bio" rows="4" maxlength="1000" placeholder="Write something about yourself…"></textarea>
-          <p class="hint">Make a link with <code>[text](https://link)</code>. Pasted links and Discord emoji like <code>&lt;:name:id&gt;</code> work too. Using <code>.set bio</code> on Discord also changes this.</p>
+          <div class="md-editor">
+            <div class="md-toolbar" id="md-toolbar" role="toolbar" aria-label="Text formatting">
+              <button type="button" class="tb" data-md="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button>
+              <button type="button" class="tb" data-md="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
+              <button type="button" class="tb" data-md="underline" title="Underline (Ctrl+U)" aria-label="Underline"><u>U</u></button>
+              <button type="button" class="tb" data-md="strike" title="Strikethrough" aria-label="Strikethrough"><s>S</s></button>
+              <span class="tb-sep" aria-hidden="true"></span>
+              <button type="button" class="tb" data-md="spoiler" title="Spoiler: hidden until clicked">Spoiler</button>
+              <button type="button" class="tb" data-md="code" title="Code">Code</button>
+              <button type="button" class="tb" data-md="link" title="Link">Link</button>
+              <span class="tb-sep" aria-hidden="true"></span>
+              <button type="button" class="tb" data-md="heading" title="Heading">Heading</button>
+              <button type="button" class="tb" data-md="quote" title="Quote">Quote</button>
+              <button type="button" class="tb" data-md="list" title="Bulleted list">List</button>
+              <button type="button" class="tb" data-md="subtext" title="Small grey text">Small</button>
+            </div>
+            <textarea id="f-bio" data-kv="bio" rows="5" maxlength="1000" placeholder="Write something about yourself…"></textarea>
+          </div>
+          <p class="hint">Uses Discord's formatting, so it looks the same as on Discord. The preview shows the result. Using <code>.set bio</code> on Discord also changes this.</p>
+          <details class="md-help">
+            <summary>Formatting help</summary>
+            <div class="md-help-body">
+              <div class="md-help-grid" id="md-help"></div>
+              <p class="hint">Custom emoji: on Discord, send <code>\:emoji_name:</code> in any chat to get its code (like <code>&lt;:name:123…&gt;</code>), then paste it here. Mention someone with <code>&lt;@their user ID&gt;</code>.</p>
+              <div class="ts-maker">
+                <span class="flabel">Make a timestamp</span>
+                <p class="hint">Timestamps show in each visitor's own time zone, like on Discord.</p>
+                <div class="row wrap" style="margin-top:2px">
+                  <input type="datetime-local" id="ts-date" aria-label="Date and time">
+                  <select id="ts-style" aria-label="Timestamp style"></select>
+                  <button type="button" class="btn small" id="ts-insert">Insert</button>
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
         <div class="grid-2">
           <div class="field">
@@ -563,7 +632,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="assets/shared.js?v=3"></script>
+<script src="assets/shared.js?v=4"></script>
+<script src="assets/markdown.js?v=4"></script>
 <script>
 "use strict";
 const S = window.SiteSettings;
@@ -1003,6 +1073,119 @@ function showView(v) {
 $("view-edit").addEventListener("click", () => showView("edit"));
 $("view-preview").addEventListener("click", () => showView("preview"));
 $("device-seg").addEventListener("change", (e) => { $("stage").dataset.device = e.target.value; });
+
+/* =====================================================================
+   ABOUT ME: Discord formatting toolbar, shortcuts, help, timestamps
+   ===================================================================== */
+const MD = window.DiscordMarkdown;
+const bioBox = $("f-bio");
+
+// Replace part of the About Me text (keeps Ctrl+Z working where the browser allows).
+function replaceRange(start, end, text, selStart, selEnd) {
+  bioBox.focus();
+  bioBox.setSelectionRange(start, end);
+  let ok = false;
+  try { ok = document.execCommand("insertText", false, text); } catch {}
+  if (!ok) {
+    bioBox.setRangeText(text, start, end, "end");
+    bioBox.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  if (selStart != null) bioBox.setSelectionRange(selStart, selEnd);
+}
+function wrapSelection(before, after = before, placeholder = "text") {
+  const s = bioBox.selectionStart, e = bioBox.selectionEnd, v = bioBox.value;
+  if (s >= before.length && v.slice(s - before.length, s) === before && v.slice(e, e + after.length) === after) {
+    // already formatted: take the markers off again
+    replaceRange(s - before.length, e + after.length, v.slice(s, e), s - before.length, e - before.length);
+    return;
+  }
+  const sel = v.slice(s, e) || placeholder;
+  replaceRange(s, e, before + sel + after, s + before.length, s + before.length + sel.length);
+}
+function prefixLines(prefix) {
+  const v = bioBox.value;
+  const start = v.lastIndexOf("\n", bioBox.selectionStart - 1) + 1;
+  let end = v.indexOf("\n", bioBox.selectionEnd);
+  if (end < 0) end = v.length;
+  const lines = v.slice(start, end).split("\n");
+  const all = lines.every(l => l.startsWith(prefix));
+  const next = lines.map(l => (all ? l.slice(prefix.length) : prefix + l)).join("\n");
+  replaceRange(start, end, next, start, start + next.length);
+}
+const MD_ACTIONS = {
+  bold: () => wrapSelection("**"),
+  italic: () => wrapSelection("*"),
+  underline: () => wrapSelection("__"),
+  strike: () => wrapSelection("~~"),
+  spoiler: () => wrapSelection("||", "||", "secret"),
+  code: () => {
+    const multi = bioBox.value.slice(bioBox.selectionStart, bioBox.selectionEnd).includes("\n");
+    multi ? wrapSelection("```\n", "\n```", "code") : wrapSelection("`", "`", "code");
+  },
+  link: () => {
+    const s = bioBox.selectionStart, e = bioBox.selectionEnd;
+    const label = bioBox.value.slice(s, e) || "link text";
+    const at = s + label.length + 3;           // select "https://" so you can paste over it
+    replaceRange(s, e, `[${label}](https://)`, at, at + 8);
+  },
+  heading: () => prefixLines("# "),
+  quote: () => prefixLines("> "),
+  list: () => prefixLines("- "),
+  subtext: () => prefixLines("-# "),
+};
+$("md-toolbar").addEventListener("mousedown", (e) => { if (e.target.closest("[data-md]")) e.preventDefault(); }); // keep the text selected
+$("md-toolbar").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-md]");
+  if (b) MD_ACTIONS[b.dataset.md]();
+});
+bioBox.addEventListener("keydown", (e) => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey) return;
+  const action = { b: "bold", i: "italic", u: "underline" }[e.key.toLowerCase()];
+  if (action) { e.preventDefault(); MD_ACTIONS[action](); }
+});
+
+// formatting help, drawn with the same formatter as the site
+const HELP = [
+  "**bold**", "*italic*", "__underline__", "~~strikethrough~~", "||spoiler||", "`code`",
+  "```\ncode block\n```", "> quote", "# Big heading", "## Medium heading", "### Small heading",
+  "-# small grey text", "- list item\n  - indented item", "1. numbered list",
+  "[masked link](https://discord.com)", "<t:1798761600:R>", "\\*not italic\\*",
+];
+if (MD) {
+  $("md-help").replaceChildren(
+    el("span", { className: "h", textContent: "You type" }),
+    el("span", { className: "h", textContent: "You get" }),
+    ...HELP.flatMap(src => [el("code", { className: "src", textContent: src }), el("div", { className: "out md" }, MD.render(src))]));
+  $("md-help").addEventListener("click", (e) => {
+    const sp = e.target.closest(".md-spoiler:not(.shown)");
+    if (sp) { e.preventDefault(); sp.classList.add("shown"); }
+  });
+}
+
+// timestamp maker: <t:UNIX:STYLE>
+const TS_STYLES = [["R", "Relative"], ["t", "Short time"], ["T", "Long time"], ["d", "Short date"], ["D", "Long date"], ["f", "Date & time"], ["F", "Full date & time"]];
+{
+  const pad = (n) => String(n).padStart(2, "0");
+  const d = new Date(Date.now() + 86400000);
+  $("ts-date").value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:00`;
+}
+function tsOptions() {
+  const ms = new Date($("ts-date").value).getTime(), ok = Number.isFinite(ms) && !!MD;
+  const keep = $("ts-style").value || "R";
+  $("ts-style").replaceChildren(...TS_STYLES.map(([k, name]) =>
+    el("option", { value: k, textContent: ok ? `${name}: ${MD.formatTimestamp(ms, k)}` : name })));
+  $("ts-style").value = keep;
+  $("ts-insert").disabled = !ok;
+}
+$("ts-date").addEventListener("input", tsOptions);
+tsOptions();
+$("ts-insert").addEventListener("click", () => {
+  const ms = new Date($("ts-date").value).getTime();
+  if (!Number.isFinite(ms)) return;
+  const code = `<t:${Math.floor(ms / 1000)}:${$("ts-style").value}>`;
+  const s = bioBox.selectionStart, e = bioBox.selectionEnd;
+  replaceRange(s, e, code, s + code.length, s + code.length);
+});
 
 /* ---------- toast ---------- */
 let toastTimer = 0;
