@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-glow">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,6 +19,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+  document.documentElement.classList.add("js-loading");
+  // failsafe: never leave the page hidden, even if a script fails to load
+  setTimeout(() => document.documentElement.classList.remove("js-loading"), 3000);
+</script>
 
 <style>
   :root{
@@ -31,7 +36,9 @@
     --line:#2A2B34;
     --accent:#7B00FF;        /* replaced live with your Discord profile colour */
     --accent-ink:#FFFFFF;
-    --name:var(--ink);       /* replaced live with your display-name colour */
+    --fx:#FFFFFF;            /* particle colour */
+    --name-font:"Space Grotesk", system-ui, sans-serif;
+    --neon-fill:color-mix(in srgb, var(--n1, #fff) 25%, #fff);
     --online:#23A55A;
     --idle:#F0B232;
     --dnd:#F23F43;
@@ -49,6 +56,8 @@
       --muted:#5C5F6A;
       --faint:#8A8D97;
       --line:#E4E3EA;
+      --fx:#8A8FA3;
+      --neon-fill:var(--n1, #17181D);
       --shadow:0 24px 60px rgba(30,25,70,.12);
       color-scheme:light;
     }
@@ -61,6 +70,8 @@
     --muted:#5C5F6A;
     --faint:#8A8D97;
     --line:#E4E3EA;
+    --fx:#8A8FA3;
+    --neon-fill:var(--n1, #17181D);
     --shadow:0 24px 60px rgba(30,25,70,.12);
     color-scheme:light;
   }
@@ -69,20 +80,36 @@
   html,body{margin:0;padding:0}
   body{
     min-height:100vh;
-    background:
-      radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
-      var(--bg);
+    background:var(--bg);
     color:var(--ink);
     font-family:'Inter',system-ui,-apple-system,sans-serif;
     font-size:15px;line-height:1.55;
     -webkit-font-smoothing:antialiased;
     padding:48px 16px 64px;
   }
+  .bg-glow body{
+    background:
+      radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 60%),
+      var(--bg);
+  }
   a{color:inherit}
   button{font:inherit;color:inherit}
   [hidden]{display:none !important}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
-  .wrap{max-width:620px;margin:0 auto}
+  /* ---------- page backgrounds & effect layers ---------- */
+  .page-bg{
+    position:fixed;inset:-48px;z-index:-1;
+    background-size:cover;background-position:center;
+  }
+  .page-bg::after{content:"";position:absolute;inset:0;background:color-mix(in srgb, var(--bg) 45%, transparent)}
+  .bg-banner .page-bg{filter:blur(26px) saturate(1.2)}
+  .bg-banner .page-bg::after{background:color-mix(in srgb, var(--bg) 55%, transparent)}
+  .fx-bg,.fx-cursor{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+  .fx-bg{z-index:0}
+  .fx-cursor{z-index:60}
+
+  .wrap{max-width:620px;margin:0 auto;position:relative;z-index:1}
 
   /* ---------- card ---------- */
   .card{
@@ -91,7 +118,20 @@
     border-radius:var(--radius);
     box-shadow:var(--shadow);
     overflow:hidden;
+    transition:opacity .45s ease, transform .15s ease-out;
   }
+  .card.tilt{will-change:transform}
+  .js-loading .card,.js-loading .live{opacity:0}
+  .card-glass .card{
+    background:color-mix(in srgb, var(--card) 60%, transparent);
+    -webkit-backdrop-filter:blur(18px) saturate(1.3);
+            backdrop-filter:blur(18px) saturate(1.3);
+  }
+  .card-glass .names,.card-glass .fact,.card-glass .activity,.card-glass .link-btn,.card-glass .link-icon{
+    background:color-mix(in srgb, var(--card-2) 55%, transparent);
+  }
+  .card-glass .avatar-ring{background:transparent}
+
   .banner{
     height:200px;position:relative;
     background:var(--accent);
@@ -163,16 +203,73 @@
             mask-image:linear-gradient(to right, transparent 0%, #000 70%);
   }
   .names-inner{position:relative}
+
+  /* ---------- display name + effects ---------- */
   .display{
-    font-family:'Space Grotesk',sans-serif;font-weight:700;
-    font-size:28px;line-height:1.1;letter-spacing:-.015em;margin:0;
-    color:var(--name);
+    position:relative;
+    font-family:var(--name-font);font-weight:700;
+    font-size:var(--name-size, 28px);line-height:1.15;letter-spacing:-.01em;margin:0;
+    color:var(--n1, var(--ink));
+    overflow-wrap:anywhere;
+    width:fit-content;max-width:100%;   /* so gradients span the text, not the whole card */
   }
-  .display.glow{text-shadow:0 0 14px color-mix(in srgb, var(--name) 55%, transparent)}
-  .display.gradient{
-    background:var(--name-gradient);
+  .display.fx-solid{color:var(--n1)}
+  .display.fx-gradient{
+    background:linear-gradient(90deg, var(--n1), var(--n2));
     -webkit-background-clip:text;background-clip:text;color:transparent;
   }
+  .display.fx-glow{
+    color:var(--n1);
+    text-shadow:0 0 10px color-mix(in srgb, var(--n1) 65%, transparent), 0 0 26px color-mix(in srgb, var(--n1) 40%, transparent);
+  }
+  .display.fx-neon{
+    color:var(--neon-fill);
+    text-shadow:0 0 3px var(--n1), 0 0 10px var(--n1), 0 0 22px var(--n1), 0 0 44px color-mix(in srgb, var(--n1) 70%, transparent);
+    animation:neon 4s infinite;
+  }
+  @keyframes neon{0%,17%,21%,24%,52%,56%,100%{opacity:1}19%,23%,54%{opacity:.55}}
+  .display.fx-rainbow{
+    background:linear-gradient(90deg,#ff4d4d,#ffa94d,#ffe14d,#4dff88,#4dc3ff,#8c6bff,#ff4dd2,#ff4d4d);
+    background-size:200% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:rainbow 4s linear infinite;
+  }
+  @keyframes rainbow{to{background-position:200% 0}}
+  .display.fx-shimmer{
+    background:linear-gradient(110deg, var(--n1) 0%, var(--n1) 42%, color-mix(in srgb, var(--n1) 25%, #fff) 50%, var(--n1) 58%, var(--n1) 100%);
+    background-size:250% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shimmer 3s ease-in-out infinite;
+  }
+  @keyframes shimmer{0%{background-position:100% 0}70%,100%{background-position:0% 0}}
+  .display.fx-toon{
+    color:var(--n1);
+    -webkit-text-stroke:1.5px #0b0b10;paint-order:stroke fill;
+    text-shadow:3px 3px 0 #0b0b10;
+  }
+  .display.fx-pop{
+    color:var(--n1);
+    text-shadow:1px 1px 0 var(--n2),2px 2px 0 var(--n2),3px 3px 0 var(--n2),4px 4px 0 var(--n2),6px 6px 10px rgba(0,0,0,.35);
+  }
+  .display.fx-glitch{color:var(--n1)}
+  .display.fx-glitch::before,.display.fx-glitch::after{
+    content:attr(data-text);position:absolute;inset:0;pointer-events:none;
+  }
+  .display.fx-glitch::before{color:#ff2d75;animation:glitch-a 2.6s infinite steps(1)}
+  .display.fx-glitch::after{color:#2de2ff;animation:glitch-b 2.6s infinite steps(1)}
+  @keyframes glitch-a{
+    0%,86%,100%{transform:none;clip-path:inset(0 0 100% 0)}
+    88%{transform:translate(3px,-1px);clip-path:inset(10% 0 55% 0)}
+    92%{transform:translate(-3px,1px);clip-path:inset(62% 0 6% 0)}
+    96%{transform:translate(2px,0);clip-path:inset(30% 0 42% 0)}
+  }
+  @keyframes glitch-b{
+    0%,86%,100%{transform:none;clip-path:inset(0 0 100% 0)}
+    89%{transform:translate(-3px,1px);clip-path:inset(55% 0 12% 0)}
+    93%{transform:translate(3px,0);clip-path:inset(8% 0 70% 0)}
+    97%{transform:translate(-2px,-1px);clip-path:inset(40% 0 30% 0)}
+  }
+
   .handle-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px 10px;margin-top:8px;color:var(--muted)}
   .handle{font-weight:500;color:var(--ink)}
   .guild-tag{
@@ -220,18 +317,38 @@
   .cta svg{width:18px;height:18px;fill:currentColor}
 
   /* ---------- sections ---------- */
-  .panel{padding:22px 24px 26px}
-  .section + .section{margin-top:22px}
-  .section[hidden] + .section{margin-top:0}
+  .panel{padding:22px 24px 26px;display:flex;flex-direction:column;gap:22px}
   .label{
     font-family:'Space Grotesk',sans-serif;font-weight:700;
     font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);margin:0 0 8px;
   }
-  .about p{margin:0 0 10px;white-space:pre-line;overflow-wrap:anywhere}
-  .about p:last-child{margin-bottom:0}
+  .about p{margin:0;white-space:pre-line;overflow-wrap:anywhere}
   .about a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
   .about img.emoji{width:22px;height:22px;vertical-align:-5px}
+  .caret{display:inline-block;width:2px;height:1.05em;margin-left:2px;vertical-align:-2px;background:currentColor;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  .links-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+  .link-btn{
+    display:flex;align-items:center;gap:10px;min-width:0;
+    padding:10px 12px;border-radius:12px;text-decoration:none;
+    background:var(--card-2);border:1px solid var(--line);
+    font-weight:600;font-size:14px;
+    transition:border-color .15s ease, transform .12s ease;
+  }
+  .link-btn svg{width:20px;height:20px;flex:none;fill:currentColor;transition:fill .15s ease}
+  .link-btn .l{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .link-btn .go{color:var(--faint);font-size:13px}
+  .links-icons{display:flex;flex-wrap:wrap;gap:8px}
+  .link-icon{
+    width:46px;height:46px;display:grid;place-items:center;border-radius:12px;
+    background:var(--card-2);border:1px solid var(--line);
+    transition:border-color .15s ease, transform .12s ease;
+  }
+  .link-icon svg{width:22px;height:22px;fill:currentColor;transition:fill .15s ease}
+  .link-btn:hover,.link-icon:hover,.link-btn:focus-visible,.link-icon:focus-visible{border-color:var(--brand, var(--accent));transform:translateY(-1px)}
+  .link-btn:hover svg,.link-icon:hover svg,.link-btn:focus-visible svg,.link-icon:focus-visible svg{fill:var(--brand, var(--accent))}
 
   .activities{display:grid;gap:10px}
   .activity{
@@ -267,12 +384,18 @@
   .fact .k{font-size:12px;color:var(--muted)}
   .fact .v{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;margin-top:2px}
 
-  .live{margin-top:14px;text-align:center;font-size:12px;color:var(--faint)}
+  .live{margin-top:14px;text-align:center;font-size:12px;color:var(--faint);transition:opacity .45s ease}
   .live i{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--faint);margin-right:6px;vertical-align:1px}
   .live.on i{background:var(--online);box-shadow:0 0 0 3px color-mix(in srgb, var(--online) 25%, transparent)}
 
   .foot{margin-top:18px;text-align:center;color:var(--faint);font-size:12.5px}
   .foot a{color:var(--muted)}
+
+  /* ---------- show / hide (set from the control panel) ---------- */
+  .hide-banner #banner-img,.hide-decoration #deco,.hide-statusDot #status,.hide-nameplate #nameplate,.hide-badges #badges,
+  .hide-serverTag #guild-tag,.hide-pronouns #pronouns,.hide-copyButton #copy-btn,
+  .hide-customStatus #custom-status,.hide-platforms #platforms,.hide-discordButton #discord-cta,
+  .hide-liveIndicator #live,.hide-themeToggle #theme-btn,.hide-footer #foot{display:none !important}
 
   @media (max-width:480px){
     body{padding-top:24px}
@@ -283,16 +406,20 @@
     .badges{right:12px;top:12px}
     .badge{width:26px;height:26px}
     .badge img{width:19px;height:19px}
-    .display{font-size:25px}
+    .display{font-size:calc(var(--name-size, 28px) * .9)}
   }
   @media (prefers-reduced-motion: reduce){
     *{transition:none !important}
+    .display,.caret{animation:none !important}
+    .display::before,.display::after{display:none}
   }
 </style>
+<style id="custom-css"></style>
 </head>
 <body>
+<div class="page-bg" id="page-bg" aria-hidden="true" hidden></div>
 <main class="wrap">
-  <article class="card" aria-labelledby="display-name">
+  <article class="card" id="card" aria-labelledby="display-name">
     <div class="banner" id="banner">
       <img id="banner-img" alt="" hidden>
       <button class="theme-btn" id="theme-btn" type="button" aria-label="Toggle light/dark theme">◐</button>
@@ -328,11 +455,15 @@
         <h2 class="label">About Me</h2>
         <div class="about" id="bio"></div>
       </div>
+      <div class="section" id="links-section" hidden>
+        <h2 class="label">Links</h2>
+        <div class="links" id="links"></div>
+      </div>
       <div class="section" id="activity-section" hidden>
         <h2 class="label">Activity</h2>
         <div class="activities" id="activities"></div>
       </div>
-      <div class="section">
+      <div class="section" id="facts-section">
         <h2 class="label">Info</h2>
         <div class="facts" id="facts"></div>
       </div>
@@ -340,48 +471,39 @@
   </article>
 
   <p class="live" id="live"><i></i><span>Connecting to Discord…</span></p>
-  <p class="foot">made by <span id="foot-name">haoni</span> · <a href="https://github.com/HAONI1028/haoni" target="_blank" rel="noopener">source</a></p>
+  <p class="foot" id="foot">made by <span id="foot-name">haoni</span> · <a href="https://github.com/HAONI1028/haoni" target="_blank" rel="noopener">source</a></p>
 </main>
 
+<script src="assets/shared.js?v=3"></script>
+<script src="assets/effects.js?v=3"></script>
 <script>
 /* =====================================================================
-   SETTINGS
-   Almost everything on this page is pulled live from Discord, so you
-   normally don't need to edit anything here.
+   Everything on this page comes from Discord (live), plus the look you
+   choose in the control panel (panel.html), which is saved to Lanyard KV.
    ===================================================================== */
-const CONFIG = {
-  discordId: "955378599412764722",
-  timezone: "America/Vancouver",
-
-  // Discord doesn't make "About Me" public, so the bio comes from Lanyard KV.
-  // To set or change it, DM the Lanyard bot on Discord:
-  //     .set bio your bio text here
-  //     .set pronouns he/him        (optional)
-  // The page updates instantly. The lines below are only used if no bio is set there.
-  // [text](https://link) makes a link, and Discord emoji like <:name:id> work.
-  bio: [],
-
-  // What the page shows before the live data arrives (or if it can't load).
-  snapshot: {
-    id: "955378599412764722",
-    username: "haoni1028",
-    global_name: "HAONI",
-    avatar: "4544384a53cc2459cbefc546aec48267",
-    banner: "a_9f2985c88b85543909d28f217d08c79b",
-    banner_color: "#7b00ff",
-    public_flags: 128,
-    nitro: true,
-    avatar_decoration_data: { asset: "a_ab6beffdbc7e82cd59af53b845f13a3c" },
-    collectibles: { nameplate: { asset: "nameplates/special_events_2/nitro_rocketfuel_nameplate/" } },
-    display_name_styles: { font_id: 6, effect_id: 3, colors: [1874155] },
-    primary_guild: { identity_guild_id: "1386407365653299352", identity_enabled: true, tag: "NES", badge: "abfcf0314946253b157797a648829c11" },
-  },
-};
-/* ===================================================================== */
-
+const S = window.SiteSettings;
+const FX = window.SiteEffects || { setParticles() {}, setCursor() {}, setTilt() {}, refreshColors() {} };
+const ID = S.DISCORD_ID;
 const CDN = "https://cdn.discordapp.com";
-const ID = CONFIG.discordId;
+const PREVIEW = new URLSearchParams(location.search).has("preview");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+// What the page shows before the live data arrives (or if it can't load).
+const SNAPSHOT = {
+  id: ID,
+  username: "haoni1028",
+  global_name: "HAONI",
+  avatar: "4544384a53cc2459cbefc546aec48267",
+  banner: "a_9f2985c88b85543909d28f217d08c79b",
+  banner_color: "#7b00ff",
+  public_flags: 128,
+  nitro: true,
+  avatar_decoration_data: { asset: "a_ab6beffdbc7e82cd59af53b845f13a3c" },
+  collectibles: { nameplate: { asset: "nameplates/special_events_2/nitro_rocketfuel_nameplate/" } },
+  display_name_styles: { font_id: 6, effect_id: 3, colors: [1874155] },
+  primary_guild: { identity_guild_id: "1386407365653299352", identity_enabled: true, tag: "NES", badge: "abfcf0314946253b157797a648829c11" },
+};
+
 const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}, ...kids) => {
   const n = Object.assign(document.createElement(tag), props);
@@ -389,8 +511,10 @@ const el = (tag, props = {}, ...kids) => {
   return n;
 };
 const setSrc = (img, url) => { if (img.getAttribute("src") !== url) img.src = url; };
-
-const DISCORD_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v9a2.5 2.5 0 0 1-2.5 2.5H9.4l-4.2 3.6c-.5.43-1.2.07-1.2-.58V5.5Zm5 5.75a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Zm6 0a1.25 1.25 0 1 0 0-2.5 1.25 1.25 0 0 0 0 2.5Z"/></svg>';
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+};
 
 // Discord profile badges: [flag bit, label, icon hash]
 const BADGES = [
@@ -411,10 +535,19 @@ const NITRO_BADGE = ["Nitro", "2ba85e8026a8614b640c2837bcdfe21b"];
 
 /* ---------- state ---------- */
 const state = {
-  user: { ...CONFIG.snapshot },
+  user: { ...SNAPSHOT },
   presence: null,
+  settings: S.defaults(),
+  siteRaw: null,      // last raw settings string seen (to skip needless re-renders)
+  preview: null,      // settings sent by the control panel's preview
+  revealed: false,
 };
 const createdAt = new Date(Number((BigInt(ID) >> 22n) + 1420070400000n));
+
+const settings = () => (state.preview ? state.preview.settings : state.settings);
+const kv = () => (state.presence && state.presence.kv) || {};
+const bioText = () => (state.preview ? state.preview.bio : kv().bio || "");
+const pronounsText = () => (state.preview ? state.preview.pronouns : kv().pronouns || "");
 
 /* ---------- helpers ---------- */
 const hex = (n) => "#" + n.toString(16).padStart(6, "0");
@@ -447,18 +580,78 @@ function richText(text) {
     last = m.index + m[0].length;
   }
   out.push(text.slice(last));
-  return out;
+  return out.filter(p => p !== "");
+}
+
+/* ---------- look: theme, background, card, font, effects, show/hide, custom CSS ---------- */
+function applyTheme() {
+  const s = settings(), root = document.documentElement;
+  let mode = s.themeMode;
+  const saved = PREVIEW ? null : store.get("theme");
+  if (saved === "dark" || saved === "light") mode = saved;
+  if (mode === "dark" || mode === "light") root.dataset.theme = mode;
+  else delete root.dataset.theme;
+  FX.refreshColors();
+}
+
+function applyBackground() {
+  const s = settings(), u = state.user, pg = $("page-bg");
+  let url = "";
+  if (s.background === "image") url = s.backgroundImage;
+  else if (s.background === "banner" && u.banner) url = `${CDN}/banners/${u.id}/${u.banner}.png?size=600`;
+  pg.style.backgroundImage = url ? `url("${url.replace(/["\\]/g, encodeURIComponent)}")` : "";
+  pg.hidden = !url;
+}
+
+let fontLink = null;
+function applyFont(id) {
+  document.documentElement.style.setProperty("--name-font", S.fontFamily(id));
+  if (id === "Space Grotesk") return; // already loaded above
+  const href = S.fontURL(id);
+  if (!fontLink) { fontLink = el("link", { rel: "stylesheet" }); document.head.append(fontLink); }
+  if (fontLink.getAttribute("href") !== href) fontLink.href = href;
+}
+
+function applyLook() {
+  const s = settings(), root = document.documentElement;
+  for (const [k] of S.SHOW) root.classList.toggle("hide-" + k, !s.show[k]);
+  root.classList.toggle("card-glass", s.cardStyle === "glass");
+  for (const b of S.BACKGROUNDS) root.classList.toggle("bg-" + b.id, s.background === b.id);
+  applyBackground();
+  applyFont(s.nameFont);
+  root.style.setProperty("--name-size", (S.NAME_SIZES.find(x => x.id === s.nameSize) || S.NAME_SIZES[1]).px + "px");
+  applyTheme();
+  FX.setParticles(s.particles);
+  FX.setCursor(s.cursor);
+  FX.setTilt($("card"), s.tilt);
+  $("custom-css").textContent = s.customCss;
 }
 
 /* ---------- profile (name, avatar, decoration, nameplate, tag, badges, colours, banner) ---------- */
-function renderUser() {
-  const u = state.user;
-  const name = u.global_name || u.display_name || u.username;
+function applyNameStyle(name) {
+  const s = settings(), u = state.user, dn = $("display-name");
+  const root = document.documentElement.style;
+  const st = u.display_name_styles || {};
+  const dc = (st.colors || []).map(hex);
+  const n1 = s.nameColors === "custom" ? s.nameColor1 : dc[0] || "var(--ink)";
+  const n2 = s.nameColors === "custom" ? s.nameColor2 : dc[1] || "var(--accent)";
+  root.setProperty("--n1", n1);
+  root.setProperty("--n2", n2);
+  let fx = s.nameEffect;
+  if (fx === "discord") fx = dc.length > 1 ? "gradient" : st.effect_id ? "glow" : "solid";
+  dn.className = "display fx-" + fx;
+  dn.dataset.text = name;
+}
 
-  document.title = name;
+function renderUser() {
+  const u = state.user, s = settings();
+  const name = s.displayName || u.global_name || u.display_name || u.username;
+
+  document.title = s.tabTitle || name;
   $("display-name").textContent = name;
   $("foot-name").textContent = name.toLowerCase();
-  $("handle").textContent = u.username;
+  $("handle").textContent = s.username || u.username;
+  applyNameStyle(name);
 
   // avatar + decoration
   const av = $("avatar");
@@ -495,22 +688,6 @@ function renderUser() {
     tagEl.title = "Server tag";
   }
 
-  // display-name colour / effect
-  const st = u.display_name_styles;
-  const dn = $("display-name");
-  dn.classList.remove("glow", "gradient");
-  const root = document.documentElement.style;
-  if (st && st.colors && st.colors.length) {
-    root.setProperty("--name", hex(st.colors[0]));
-    if (st.colors.length > 1) {
-      root.setProperty("--name-gradient", `linear-gradient(90deg, ${st.colors.map(hex).join(", ")})`);
-      dn.classList.add("gradient");
-    }
-    if (st.effect_id) dn.classList.add("glow");
-  } else {
-    root.removeProperty("--name");
-  }
-
   // badges
   const flags = u.public_flags || 0;
   const list = BADGES.filter(([bit]) => flags & bit).map(([, label, icon]) => [label, icon]);
@@ -522,8 +699,10 @@ function renderUser() {
       el("span", { className: "tip", textContent: label }))
   ));
 
-  // profile colour + banner
-  const color = u.banner_color || (u.accent_color != null ? hex(u.accent_color) : null);
+  // accent colour (Discord profile colour unless overridden) + banner
+  const root = document.documentElement.style;
+  const discordColor = u.banner_color || (u.accent_color != null ? hex(u.accent_color) : null);
+  const color = s.accentSource === "custom" ? s.accent : discordColor;
   if (color) {
     root.setProperty("--accent", color);
     root.setProperty("--accent-ink", readableInk(color));
@@ -535,24 +714,92 @@ function renderUser() {
     const animated = u.banner.startsWith("a_") && !reducedMotion;
     setSrc(bImg, `${CDN}/banners/${u.id}/${u.banner}.${animated ? "gif" : "png"}?size=1024`);
   }
+  applyBackground();
+  FX.refreshColors();
 
   // add-me button
   const cta = $("discord-cta");
   cta.href = `https://discord.com/users/${u.id}`;
-  cta.innerHTML = DISCORD_ICON;
-  cta.append("Add me on Discord ↗");
+  cta.replaceChildren(S.discordIcon(), s.discordButtonText + " ↗");
 }
 
-/* ---------- bio (Lanyard KV → fallback) ---------- */
-function renderBio() {
-  const kv = (state.presence && state.presence.kv) || {};
-  const lines = kv.bio ? [kv.bio] : CONFIG.bio;
-  $("bio-section").hidden = !lines.length;
-  $("bio").replaceChildren(...lines.map(t => el("p", {}, richText(String(t)))));
+/* ---------- bio (Lanyard KV "bio") with optional typewriter ---------- */
+let bioKey = null, typeRun = 0;
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const graphemes = (str) => (typeof Intl.Segmenter === "function"
+  ? [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)].map(x => x.segment)
+  : [...str]);
 
-  const pr = kv.pronouns;
+async function typewrite(p, parts, run) {
+  const caret = el("span", { className: "caret" });
+  p.append(caret);
+  for (const part of parts) {
+    if (run !== typeRun) return;
+    if (typeof part === "string" || part.tagName === "A") {
+      const text = typeof part === "string" ? part : part.textContent;
+      const target = typeof part === "string" ? document.createTextNode("") : part;
+      if (target !== part) p.insertBefore(target, caret);
+      else { part.textContent = ""; p.insertBefore(part, caret); }
+      for (const ch of graphemes(text)) {
+        if (run !== typeRun) return;
+        if (target.nodeType === 3) target.data += ch; else target.textContent += ch;
+        await sleep(ch === "\n" ? 200 : 32);
+      }
+    } else {
+      p.insertBefore(part, caret);
+      await sleep(80);
+    }
+  }
+}
+
+function renderBio() {
+  const s = settings();
+  const bio = bioText().trim();
+  const show = s.show.bio && !!bio;
+  $("bio-section").hidden = !show;
+  const key = show ? bio + "\u0000" + s.typewriter : null;
+  if (key === bioKey) return; // unchanged — don't restart the typewriter
+  bioKey = key;
+  typeRun++;
+  if (!show) { $("bio").replaceChildren(); return; }
+  if (s.typewriter && !reducedMotion) {
+    const shown = el("p");
+    shown.setAttribute("aria-hidden", "true");
+    $("bio").replaceChildren(el("p", { className: "sr-only" }, richText(bio)), shown);
+    typewrite(shown, richText(bio), typeRun);
+  } else {
+    $("bio").replaceChildren(el("p", {}, richText(bio)));
+  }
+}
+function renderPronouns() {
+  const pr = pronounsText().trim();
   $("pronouns").hidden = !pr;
   $("pronouns").textContent = pr ? "• " + pr : "";
+}
+
+/* ---------- links ---------- */
+function renderLinks() {
+  const s = settings();
+  const links = s.show.links ? s.links : [];
+  $("links-section").hidden = links.length === 0;
+  const box = $("links");
+  box.className = "links links-" + s.linkStyle;
+  box.replaceChildren(...links.map(l => {
+    const info = S.linkInfo(l.url);
+    const label = l.label || info.name;
+    const a = el("a", { href: l.url, target: "_blank", rel: "noopener me" });
+    if (info.color) a.style.setProperty("--brand", info.color);
+    if (s.linkStyle === "icons") {
+      a.className = "link-icon";
+      a.title = label;
+      a.setAttribute("aria-label", label);
+      a.append(S.iconSVG(info));
+    } else {
+      a.className = "link-btn";
+      a.append(S.iconSVG(info), el("span", { className: "l", textContent: label }), el("span", { className: "go", textContent: "↗" }));
+    }
+    return a;
+  }));
 }
 
 /* ---------- presence (status, platforms, custom status, activities, Spotify) ---------- */
@@ -581,11 +828,11 @@ function assetURL(a, key) {
 }
 
 function renderPresence() {
-  const d = state.presence;
-  const s = (d && d.discord_status) || "offline";
-  $("status").dataset.s = s;
-  $("status").setAttribute("aria-label", `Status: ${STATUS_NAMES[s]}`);
-  $("status").title = STATUS_NAMES[s];
+  const d = state.presence, s = settings();
+  const st = (d && d.discord_status) || "offline";
+  $("status").dataset.s = st;
+  $("status").setAttribute("aria-label", `Status: ${STATUS_NAMES[st]}`);
+  $("status").title = STATUS_NAMES[st];
   if (!d) return;
 
   // platforms
@@ -597,8 +844,8 @@ function renderPresence() {
   ].filter(Boolean);
   const pl = $("platforms");
   pl.hidden = false;
-  pl.dataset.s = s;
-  pl.querySelector("span").textContent = s === "offline" ? "Offline" : `${STATUS_NAMES[s]}${on.length ? " on " + on.join(", ") : ""}`;
+  pl.dataset.s = st;
+  pl.querySelector("span").textContent = st === "offline" ? "Offline" : `${STATUS_NAMES[st]}${on.length ? " on " + on.join(", ") : ""}`;
 
   const acts = d.activities || [];
 
@@ -619,7 +866,7 @@ function renderPresence() {
 
   // activities
   const cards = [];
-  if (d.listening_to_spotify && d.spotify) {
+  if (s.show.spotify && d.listening_to_spotify && d.spotify) {
     const sp = d.spotify;
     const card = el("a", { className: "activity", href: `https://open.spotify.com/track/${sp.track_id}`, target: "_blank", rel: "noopener" },
       el("div", { className: "art" }, sp.album_art_url ? el("img", { src: sp.album_art_url, alt: "" }) : "🎵"),
@@ -634,7 +881,7 @@ function renderPresence() {
     card.dataset.end = sp.timestamps.end;
     cards.push(card);
   }
-  for (const a of acts) {
+  for (const a of s.show.activity ? acts : []) {
     if (a.type === 4) continue;
     if (a.type === 2 && a.name === "Spotify" && d.listening_to_spotify) continue;
     const large = assetURL(a, "large_image"), small = assetURL(a, "small_image");
@@ -683,16 +930,33 @@ function tickTimers() {
 
 /* ---------- info ---------- */
 function renderFacts() {
-  const facts = [["Member Since", createdAt.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" })]];
-  try {
-    facts.push(["Local Time", new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit", timeZone: CONFIG.timezone }).format(new Date())]);
-  } catch {}
+  const s = settings(), facts = [];
+  if (s.show.memberSince) facts.push(["Member Since", createdAt.toLocaleDateString([], { year: "numeric", month: "short", day: "numeric" })]);
+  if (s.show.localTime) {
+    try { facts.push(["Local Time", new Intl.DateTimeFormat([], { hour: "numeric", minute: "2-digit", timeZone: s.timezone }).format(new Date())]); } catch {}
+  }
+  $("facts-section").hidden = facts.length === 0;
   $("facts").replaceChildren(...facts.map(([k, v]) =>
     el("div", { className: "fact" }, el("div", { className: "k", textContent: k }), el("div", { className: "v", textContent: v }))
   ));
 }
 
-/* ---------- copy username ---------- */
+function renderAll() {
+  renderUser();
+  renderBio();
+  renderPronouns();
+  renderLinks();
+  renderPresence();
+  renderFacts();
+}
+
+function reveal() {
+  if (state.revealed) return;
+  state.revealed = true;
+  document.documentElement.classList.remove("js-loading");
+}
+
+/* ---------- copy username (always the real Discord username) ---------- */
 $("copy-btn").onclick = async (e) => {
   const btn = e.currentTarget, name = state.user.username;
   try { await navigator.clipboard.writeText(name); }
@@ -706,10 +970,23 @@ $("copy-btn").onclick = async (e) => {
   setTimeout(() => { btn.textContent = "Copy username"; btn.classList.remove("done"); }, 1600);
 };
 
+/* ---------- theme toggle (a visitor's choice beats the default) ---------- */
+$("theme-btn").onclick = () => {
+  const root = document.documentElement;
+  const isLight = root.dataset.theme
+    ? root.dataset.theme === "light"
+    : matchMedia("(prefers-color-scheme: light)").matches;
+  root.dataset.theme = isLight ? "dark" : "light";
+  if (!PREVIEW) store.set("theme", root.dataset.theme);
+  FX.refreshColors();
+};
+matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => FX.refreshColors());
+
 /* =====================================================================
    LIVE DATA
    - Lanyard WebSocket: status, activities, Spotify, custom status, avatar,
-     name, decoration, nameplate, server tag, bio (KV) — pushed instantly.
+     name, decoration, nameplate, server tag, bio, and your control-panel
+     settings (KV) — pushed instantly.
    - japi.rest: banner, profile colour, Nitro badge (refreshed every 10 min).
    ===================================================================== */
 function setLive(on, text) {
@@ -731,9 +1008,15 @@ function applyPresence(d) {
     display_name_styles: du.display_name_styles || null,
     primary_guild: du.primary_guild || null,
   });
-  renderUser();
-  renderBio();
-  renderPresence();
+  const raw = (d.kv && d.kv.site) || "";
+  if (raw !== state.siteRaw) {
+    state.siteRaw = raw;
+    state.settings = S.sanitize(raw);
+    if (!PREVIEW) store.set("haoni.site", raw || null);
+    if (!state.preview) applyLook();
+  }
+  renderAll();
+  reveal();
 }
 
 async function loadProfileExtras() {
@@ -761,7 +1044,7 @@ async function loadProfileExtras() {
 
 let ws, heartbeat, retries = 0, pollTimer;
 function connectSocket() {
-  try { ws = new WebSocket("wss://api.lanyard.rest/socket"); }
+  try { ws = new WebSocket(S.LANYARD_SOCKET); }
   catch { return startPolling(); }
   ws.onmessage = (e) => {
     let m; try { m = JSON.parse(e.data); } catch { return; }
@@ -785,7 +1068,7 @@ function connectSocket() {
 
 async function pollOnce() {
   try {
-    const j = await (await fetch(`https://api.lanyard.rest/v1/users/${ID}`)).json();
+    const j = await (await fetch(`${S.LANYARD_API}/users/${ID}`)).json();
     if (j.success) { applyPresence(j.data); setLive(true, "Live from Discord (updates every 30s)"); }
   } catch {}
 }
@@ -795,24 +1078,33 @@ function startPolling() {
   pollTimer = setInterval(pollOnce, 30000);
 }
 
-/* ---------- theme toggle ---------- */
-(function initTheme() {
-  const root = document.documentElement;
-  try { const saved = localStorage.getItem("theme"); if (saved) root.dataset.theme = saved; } catch {}
-  $("theme-btn").onclick = () => {
-    const isLight = root.dataset.theme
-      ? root.dataset.theme === "light"
-      : matchMedia("(prefers-color-scheme: light)").matches;
-    root.dataset.theme = isLight ? "dark" : "light";
-    try { localStorage.setItem("theme", root.dataset.theme); } catch {}
-  };
-})();
+/* ---------- live preview for the control panel ---------- */
+if (PREVIEW) {
+  addEventListener("message", (e) => {
+    if (e.origin !== location.origin || e.source !== parent) return;
+    const m = e.data;
+    if (!m || m.type !== "haoni:preview") return;
+    state.preview = {
+      settings: S.sanitize(m.settings),
+      bio: typeof m.bio === "string" ? m.bio.slice(0, S.LIMITS.bio) : "",
+      pronouns: typeof m.pronouns === "string" ? m.pronouns.slice(0, S.LIMITS.pronouns) : "",
+    };
+    applyLook();
+    renderAll();
+    reveal();
+  });
+  if (parent !== window) parent.postMessage({ type: "haoni:ready" }, "/");
+}
 
 /* ---------- go ---------- */
-renderUser();
-renderBio();
-renderPresence();
-renderFacts();
+if (!PREVIEW) {
+  const cached = store.get("haoni.site");
+  if (cached) { state.siteRaw = cached; state.settings = S.sanitize(cached); }
+}
+applyLook();
+renderAll();
+if (state.siteRaw) reveal();          // returning visitor: we already know the look
+setTimeout(reveal, 1500);              // never stay hidden if Discord is slow
 setInterval(tickTimers, 1000);
 setInterval(renderFacts, 15000);
 connectSocket();
