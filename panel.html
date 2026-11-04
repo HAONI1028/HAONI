@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Control Panel</title>
+<link rel="icon" id="favicon" href="https://cdn.discordapp.com/avatars/955378599412764722/4544384a53cc2459cbefc546aec48267.png?size=64">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0E0F13;
+    --card:#17181E;
+    --card-2:#202129;
+    --ink:#F2F3F5;
+    --muted:#A0A3AD;
+    --faint:#6E717B;
+    --line:#2A2B34;
+    --line-2:#393A46;
+    --accent:#7B00FF;
+    --accent-ink:#FFFFFF;
+    --accent-soft:color-mix(in srgb, var(--accent) 20%, transparent);
+    --accent-text:#B794FF;
+    --ok:#23A55A;  --ok-text:#4ADE80;
+    --warn:#F0B232;
+    --bad:#F23F43; --bad-text:#FF7A7D;
+    --top-h:58px;
+    color-scheme:dark;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#F3F2F7;
+      --card:#FFFFFF;
+      --card-2:#F5F5F8;
+      --ink:#17181D;
+      --muted:#5C5F6A;
+      --faint:#8A8D97;
+      --line:#E4E3EA;
+      --line-2:#D3D2DC;
+      --accent-text:#5B00C2;
+      --ok-text:#15803D;
+      --bad-text:#C42B2F;
+      color-scheme:light;
+    }
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  html{scroll-padding-top:120px}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size:14.5px;line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  [hidden]{display:none !important}
+  a{color:inherit}
+  button,input,textarea{font:inherit;color:inherit}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
+    background:var(--card-2);border:1px solid var(--line);padding:1px 5px;border-radius:5px;
+  }
+  :focus-visible{outline:2px solid var(--accent-text);outline-offset:2px}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:30;height:var(--top-h);
+    display:flex;align-items:center;gap:12px;padding:0 20px;
+    border-bottom:1px solid var(--line);
+    background:color-mix(in srgb, var(--bg) 84%, transparent);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  }
+  .brand{display:flex;align-items:center;gap:10px;min-width:0;margin-right:auto}
+  .me-avatar{width:36px;height:36px;border-radius:50%;background:var(--card-2);flex:none;object-fit:cover}
+  .brand-text{display:flex;flex-direction:column;min-width:0}
+  .brand-text strong{font-family:'Space Grotesk',sans-serif;font-size:16px;line-height:1.2}
+  .brand-text span{color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .top-actions{display:flex;align-items:center;gap:8px;flex:none}
+  .state{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--muted);white-space:nowrap;margin-right:4px}
+  .state i{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .state[data-s="dirty"] i{background:var(--warn)}
+  .state[data-s="saved"] i{background:var(--ok)}
+  .state[data-s="error"] i{background:var(--bad)}
+  .state[data-s="saving"] i,.state[data-s="loading"] i{background:var(--accent-text);animation:pulse 1s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.3}}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    height:36px;padding:0 14px;border-radius:10px;
+    border:1px solid var(--line-2);background:var(--card-2);
+    font-weight:600;font-size:13.5px;text-decoration:none;white-space:nowrap;cursor:pointer;
+    transition:border-color .15s ease, filter .15s ease, background .15s ease;
+  }
+  .btn:hover:not(:disabled){border-color:var(--accent)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn.primary:hover:not(:disabled){filter:brightness(1.15)}
+  .btn.danger{color:var(--bad-text)}
+  .btn.danger:hover:not(:disabled){border-color:var(--bad)}
+  .btn.small{height:30px;padding:0 10px;font-size:12.5px}
+  .btn .short{display:none}
+  .icon-btn{
+    width:32px;height:32px;flex:none;display:grid;place-items:center;
+    border-radius:8px;border:1px solid var(--line);background:var(--card);
+    font-size:13px;cursor:pointer;
+  }
+  .icon-btn:hover:not(:disabled){border-color:var(--accent)}
+  .icon-btn:disabled{opacity:.35;cursor:default}
+  .icon-btn.del:hover:not(:disabled){border-color:var(--bad);color:var(--bad-text)}
+
+  /* ---------- layout ---------- */
+  .mobile-switch{display:none}
+  .layout{
+    display:grid;grid-template-columns:minmax(0,1fr) minmax(400px,46%);gap:24px;
+    max-width:1500px;margin:0 auto;padding:12px 20px 40px;
+  }
+  .editor{min-width:0}
+  .jump{
+    position:sticky;top:var(--top-h);z-index:20;
+    display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;
+    padding:10px 0 14px;
+    background:linear-gradient(var(--bg) 75%, transparent);
+  }
+  .jump::-webkit-scrollbar{display:none}
+  .jump a{
+    flex:none;padding:6px 12px;border-radius:999px;
+    border:1px solid var(--line);background:var(--card);
+    font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:none;
+  }
+  .jump a:hover{color:var(--ink);border-color:var(--line-2)}
+
+  .group{
+    background:var(--card);border:1px solid var(--line);border-radius:16px;
+    padding:20px;margin-bottom:16px;
+  }
+  .group-head h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:18px;letter-spacing:-.01em}
+  .group-head p{margin:4px 0 0;color:var(--muted);font-size:13.5px}
+  fieldset{border:0;margin:0;padding:0;min-width:0}
+  fieldset:disabled{opacity:.5;pointer-events:none}
+
+  .field{display:grid;gap:7px;margin-top:16px;min-width:0}
+  .field > label,.flabel{font-weight:600;font-size:13px}
+  .label-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .label-row label{font-weight:600;font-size:13px}
+  .count{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+  .count.full{color:var(--bad-text)}
+  .grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 16px}
+  .hint{margin:0;color:var(--muted);font-size:12.5px}
+  .hint.error{color:var(--bad-text)}
+
+  input[type="text"],input[type="url"],input[type="password"],textarea{
+    width:100%;min-width:0;padding:9px 12px;border-radius:10px;
+    border:1px solid var(--line-2);background:var(--card-2);font-size:14px;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea{resize:vertical;min-height:96px;line-height:1.5}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px}
+  input[type="text"]:focus,input[type="url"]:focus,input[type="password"]:focus,textarea:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  ::placeholder{color:var(--faint)}
+
+  /* ---------- option pills ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .opt{position:relative}
+  .opt input,.font-opt input,.switch input{position:absolute;opacity:0;width:1px;height:1px;margin:0;pointer-events:none}
+  .opt span{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:7px 13px;border-radius:999px;border:1px solid var(--line-2);background:var(--card-2);
+    font-weight:600;font-size:13px;cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .opt span:hover{border-color:var(--faint)}
+  .opt input:checked + span{background:var(--accent-soft);border-color:var(--accent)}
+  .opt input:focus-visible + span{outline:2px solid var(--accent-text);outline-offset:2px}
+  .seg{
+    display:inline-flex;flex-wrap:wrap;gap:2px;width:fit-content;max-width:100%;
+    padding:3px;border-radius:12px;border:1px solid var(--line-2);background:var(--card-2);
+  }
+  .seg .opt span{border:0;border-radius:9px;background:transparent;padding:6px 12px}
+  .seg .opt span:hover{background:var(--line)}
+  .seg .opt input:checked + span{background:var(--accent);color:var(--accent-ink)}
+
+  /* ---------- fonts ---------- */
+  .font-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:8px}
+  .font-opt{position:relative;min-width:0}
+  .font-card{
+    display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:70px;
+    padding:10px 12px;border-radius:12px;border:1px solid var(--line-2);background:var(--card-2);
+    cursor:pointer;overflow:hidden;transition:border-color .15s ease, background .15s ease;
+  }
+  .font-card:hover{border-color:var(--faint)}
+  .font-card .sample{font-size:20px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .font-card .fname{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .font-opt input:checked + .font-card{border-color:var(--accent);background:var(--accent-soft)}
+  .font-opt input:focus-visible + .font-card{outline:2px solid var(--accent-text);outline-offset:2px}
+
+  /* ---------- colours ---------- */
+  .color-row{display:flex;flex-wrap:wrap;gap:10px}
+  .color{
+    display:inline-flex;align-items:center;gap:9px;width:fit-content;
+    padding:5px 12px 5px 5px;border-radius:10px;border:1px solid var(--line-2);background:var(--card-2);
+    font-weight:600;font-size:13px;cursor:pointer;
+  }
+  .color input{width:30px;height:30px;padding:0;border:0;border-radius:7px;background:none;cursor:pointer}
+  .color input::-webkit-color-swatch-wrapper{padding:0}
+  .color input::-webkit-color-swatch{border:1px solid rgba(127,127,127,.35);border-radius:7px}
+  .color input::-moz-color-swatch{border:1px solid rgba(127,127,127,.35);border-radius:7px}
+  .color .hex{color:var(--muted);font-weight:500;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+
+  /* ---------- switches ---------- */
+  .switches{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;margin-top:16px}
+  .switch{
+    position:relative;display:flex;align-items:center;gap:10px;
+    padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card-2);
+    font-size:13.5px;font-weight:500;cursor:pointer;
+  }
+  .track{flex:none;position:relative;width:34px;height:20px;border-radius:999px;background:var(--line-2);transition:background .15s ease}
+  .track::after{
+    content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;
+    background:#fff;transition:transform .15s ease;box-shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .track{background:var(--accent)}
+  .switch input:checked + .track::after{transform:translateX(14px)}
+  .switch input:focus-visible + .track{outline:2px solid var(--accent-text);outline-offset:2px}
+
+  /* ---------- links editor ---------- */
+  .link-list{display:grid;gap:8px;margin-top:16px}
+  .link-row{
+    display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;
+    padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--card-2);
+  }
+  .link-row.invalid{border-color:color-mix(in srgb, var(--bad) 60%, var(--line))}
+  .l-ico{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:var(--card);border:1px solid var(--line)}
+  .l-ico svg{width:20px;height:20px;fill:currentColor}
+  .l-inputs{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.4fr);gap:8px}
+  .l-inputs input{background:var(--card)}
+  .l-actions{display:flex;gap:4px}
+  .l-err{grid-column:2 / -1}
+  .empty{margin-top:16px;padding:18px;border:1px dashed var(--line-2);border-radius:12px;text-align:center;color:var(--muted);font-size:13.5px}
+
+  .row{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .row.between{justify-content:space-between;flex-wrap:wrap}
+  .row.wrap{flex-wrap:wrap}
+
+  /* ---------- connect ---------- */
+  .steps{margin:12px 0 0;padding-left:20px;color:var(--muted);font-size:13.5px}
+  .steps li + li{margin-top:4px}
+  .key-row{display:flex;gap:8px;margin-top:12px}
+  .key-row input{flex:1}
+  .check{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--muted);cursor:pointer}
+  .check input{accent-color:var(--accent);width:16px;height:16px;margin:0}
+  .ok-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-weight:600;color:var(--ok-text)}
+  .notice{margin:14px 0 0;padding:10px 12px;border-radius:10px;font-size:13.5px;border:1px solid var(--line);background:var(--card-2);color:var(--muted)}
+  .notice.error{border-color:color-mix(in srgb, var(--bad) 55%, var(--line));color:var(--bad-text)}
+  .notice button{margin-left:6px}
+
+  /* ---------- preview ---------- */
+  .preview{position:sticky;top:calc(var(--top-h) + 12px);height:calc(100vh - var(--top-h) - 32px);display:flex;flex-direction:column;gap:10px;min-width:0}
+  .preview-bar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .preview-bar h2{margin:0;font-family:'Space Grotesk',sans-serif;font-size:12.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+  .stage{
+    flex:1;min-height:0;display:flex;justify-content:center;
+    border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--card);
+  }
+  .stage iframe{width:100%;height:100%;border:0;display:block;background:var(--bg)}
+  .stage[data-device="phone"]{padding:16px;background:var(--card-2)}
+  .stage[data-device="phone"] iframe{width:390px;max-width:100%;border:1px solid var(--line-2);border-radius:28px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+  .preview-note{margin:0;font-size:12px;color:var(--faint)}
+
+  /* ---------- toast ---------- */
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:50;
+    max-width:min(520px, calc(100vw - 32px));
+    padding:11px 16px;border-radius:12px;
+    background:var(--ink);color:var(--bg);font-weight:600;font-size:13.5px;
+    box-shadow:0 12px 40px rgba(0,0,0,.35);
+  }
+  .toast[data-kind="error"]{background:var(--bad);color:#fff}
+
+  @media (max-width:1000px){
+    .layout{grid-template-columns:minmax(0,1fr);padding:0 12px 32px}
+    .mobile-switch{
+      display:flex;gap:6px;position:sticky;top:var(--top-h);z-index:25;
+      padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--line);
+    }
+    .mobile-switch button{
+      flex:1;height:34px;border-radius:9px;border:1px solid var(--line-2);background:var(--card-2);
+      font-weight:600;cursor:pointer;
+    }
+    .mobile-switch button[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+    .layout[data-view="edit"] .preview{display:none}
+    .layout[data-view="preview"] .editor{display:none}
+    .preview{position:static;margin-top:12px;height:calc(100vh - var(--top-h) - 76px);height:calc(100dvh - var(--top-h) - 76px)}
+    .jump{top:calc(var(--top-h) + 51px)}
+    html{scroll-padding-top:170px}
+  }
+  @media (max-width:600px){
+    :root{--top-h:54px}
+    .topbar{padding:0 12px;gap:8px}
+    .state span{display:none}
+    .btn .long{display:none}
+    .btn .short{display:inline}
+    .group{padding:16px}
+    .link-row{grid-template-columns:36px minmax(0,1fr)}
+    .l-ico{width:36px;height:36px}
+    .l-inputs{grid-template-columns:minmax(0,1fr)}
+    .l-actions{grid-column:2;justify-content:flex-end}
+    #device-seg{display:none}
+    .stage[data-device="phone"]{padding:0}
+    .stage[data-device="phone"] iframe{border:0;border-radius:0;box-shadow:none}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;animation:none !important}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <img class="me-avatar" id="me-avatar" alt="" src="https://cdn.discordapp.com/avatars/955378599412764722/4544384a53cc2459cbefc546aec48267.png?size=64">
+    <div class="brand-text">
+      <strong>Control Panel</strong>
+      <span id="me-name">HAONI · @haoni1028</span>
+    </div>
+  </div>
+  <div class="top-actions">
+    <span class="state" id="state" data-s="loading" role="status"><i></i><span id="state-text">Loading…</span></span>
+    <a class="btn" href="./" target="_blank" rel="noopener"><span class="long">View site ↗</span><span class="short">Site ↗</span></a>
+    <button class="btn primary" id="save-btn" type="button" disabled><span class="long">Save &amp; publish</span><span class="short">Save</span></button>
+  </div>
+</header>
+
+<div class="mobile-switch" role="tablist" aria-label="Panel view">
+  <button type="button" role="tab" id="view-edit" aria-selected="true" data-view="edit">Edit</button>
+  <button type="button" role="tab" id="view-preview" aria-selected="false" data-view="preview">Preview</button>
+</div>
+
+<main class="layout" id="layout" data-view="edit">
+  <div class="editor">
+    <nav class="jump" aria-label="Sections">
+      <a href="#g-connect">Connect</a>
+      <a href="#g-profile">Profile</a>
+      <a href="#g-links">Links</a>
+      <a href="#g-name">Name style</a>
+      <a href="#g-effects">Effects</a>
+      <a href="#g-look">Look</a>
+      <a href="#g-show">Show / hide</a>
+      <a href="#g-advanced">Advanced</a>
+    </nav>
+
+    <!-- Connect -->
+    <section class="group" id="g-connect" aria-labelledby="h-connect">
+      <div class="group-head">
+        <h2 id="h-connect">Connect</h2>
+        <p>Your settings are saved to Lanyard, and your site picks up changes instantly. Saving needs your Lanyard API key.</p>
+      </div>
+      <div id="key-missing">
+        <ol class="steps">
+          <li>On Discord, send the Lanyard bot a DM saying <code>.apikey</code></li>
+          <li>Paste the key it sends back here. It stays on this device and is only ever sent to Lanyard. Don't share it: anyone with it can change your site.</li>
+        </ol>
+        <form class="key-row" id="key-form" autocomplete="off">
+          <input type="password" id="key-input" placeholder="Paste your Lanyard API key" spellcheck="false" aria-label="Lanyard API key">
+          <button type="submit" class="btn">Use key</button>
+        </form>
+        <label class="check"><input type="checkbox" id="key-remember" checked> Remember on this device</label>
+      </div>
+      <div id="key-present" hidden>
+        <div class="ok-line">✓ API key added <span class="hint" id="key-where"></span>
+          <button type="button" class="btn small" id="key-forget">Forget key</button>
+        </div>
+      </div>
+      <p class="notice" id="load-notice">Loading your current settings from Lanyard…</p>
+    </section>
+
+    <fieldset id="fields" disabled>
+      <!-- Profile -->
+      <section class="group" id="g-profile" aria-labelledby="h-profile">
+        <div class="group-head">
+          <h2 id="h-profile">Profile</h2>
+          <p>Leave a field empty to use what's on your Discord profile.</p>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-displayName">Display name</label>
+            <input type="text" id="f-displayName" data-key="displayName" maxlength="32" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-username">Username</label>
+            <input type="text" id="f-username" data-key="username" maxlength="32" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-pronouns">Pronouns</label>
+            <input type="text" id="f-pronouns" data-kv="pronouns" maxlength="40" placeholder="e.g. he/him" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-tabTitle">Browser tab title</label>
+            <input type="text" id="f-tabTitle" data-key="tabTitle" maxlength="60" autocomplete="off">
+          </div>
+        </div>
+        <p class="hint" style="margin-top:8px">The “Copy username” button always copies your real Discord username.</p>
+        <div class="field">
+          <div class="label-row"><label for="f-bio">About Me</label><span class="count" data-count-for="f-bio"></span></div>
+          <textarea id="f-bio" data-kv="bio" rows="4" maxlength="1000" placeholder="Write something about yourself…"></textarea>
+          <p class="hint">Make a link with <code>[text](https://link)</code>. Pasted links and Discord emoji like <code>&lt;:name:id&gt;</code> work too. Using <code>.set bio</code> on Discord also changes this.</p>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="f-discordButtonText">“Add me on Discord” button text</label>
+            <input type="text" id="f-discordButtonText" data-key="discordButtonText" maxlength="40" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="f-timezone">Time zone (for Local Time)</label>
+            <input type="text" id="f-timezone" data-key="timezone" list="tz-list" autocomplete="off" spellcheck="false">
+            <datalist id="tz-list"></datalist>
+            <p class="hint error" id="tz-error" hidden>Pick a time zone from the list, like America/Vancouver.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Links -->
+      <section class="group" id="g-links" aria-labelledby="h-links">
+        <div class="group-head">
+          <h2 id="h-links">Links</h2>
+          <p>Up to 12. Icons are picked automatically for YouTube, TikTok, Instagram, X, Twitch, Spotify, Steam, Roblox, GitHub, Discord and more.</p>
+        </div>
+        <div class="link-list" id="link-list"></div>
+        <p class="empty" id="links-empty">No links yet.</p>
+        <div class="row between">
+          <button type="button" class="btn" id="add-link">+ Add link</button>
+          <div class="seg" data-options="LINK_STYLES" data-key="linkStyle" aria-label="Link style"></div>
+        </div>
+      </section>
+
+      <!-- Name style -->
+      <section class="group" id="g-name" aria-labelledby="h-name">
+        <div class="group-head">
+          <h2 id="h-name">Name style</h2>
+          <p>Font, effect, size and colors for your display name.</p>
+        </div>
+        <div class="field">
+          <span class="flabel" id="l-font">Font</span>
+          <div class="font-grid" id="font-grid" role="radiogroup" aria-labelledby="l-font"></div>
+        </div>
+        <div class="field">
+          <span class="flabel">Effect</span>
+          <div class="chips" data-options="NAME_EFFECTS" data-key="nameEffect" aria-label="Name effect"></div>
+        </div>
+        <div class="field">
+          <span class="flabel">Size</span>
+          <div class="seg" data-options="NAME_SIZES" data-key="nameSize" aria-label="Name size"></div>
+        </div>
+        <div class="field" id="name-colors-field">
+          <span class="flabel">Colors</span>
+          <div class="seg" data-options="NAME_COLORS" data-key="nameColors" aria-label="Name colors"></div>
+          <div class="color-row" id="custom-name-colors">
+            <label class="color"><input type="color" data-key="nameColor1"><span>Color 1 <span class="hex" data-hex="nameColor1"></span></span></label>
+            <label class="color" id="color2-wrap"><input type="color" data-key="nameColor2"><span>Color 2 <span class="hex" data-hex="nameColor2"></span></span></label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Effects -->
+      <section class="group" id="g-effects" aria-labelledby="h-effects">
+        <div class="group-head">
+          <h2 id="h-effects">Effects</h2>
+          <p>Animated extras. Cursor effects and tilt only run with a mouse, and everything goes still for visitors who turn on reduced motion.</p>
+        </div>
+        <div class="field">
+          <span class="flabel">Background particles</span>
+          <div class="chips" data-options="PARTICLES" data-key="particles" aria-label="Background particles"></div>
+        </div>
+        <div class="field">
+          <span class="flabel">Cursor effect</span>
+          <div class="chips" data-options="CURSORS" data-key="cursor" aria-label="Cursor effect"></div>
+        </div>
+        <div class="switches">
+          <label class="switch"><input type="checkbox" data-key="tilt"><span class="track" aria-hidden="true"></span><span>3D tilt when hovering the card</span></label>
+          <label class="switch"><input type="checkbox" data-key="typewriter"><span class="track" aria-hidden="true"></span><span>Type out the About Me</span></label>
+        </div>
+      </section>
+
+      <!-- Look -->
+      <section class="group" id="g-look" aria-labelledby="h-look">
+        <div class="group-head">
+          <h2 id="h-look">Look</h2>
+          <p>Theme, colors, card and page background.</p>
+        </div>
+        <div class="field">
+          <span class="flabel">Default theme</span>
+          <div class="seg" data-options="THEME_MODES" data-key="themeMode" aria-label="Default theme"></div>
+          <p class="hint">Visitors can still switch with the ◐ button unless you hide it.</p>
+        </div>
+        <div class="field">
+          <span class="flabel">Accent color</span>
+          <div class="seg" data-options="ACCENT_SOURCES" data-key="accentSource" aria-label="Accent color"></div>
+          <label class="color" id="accent-wrap"><input type="color" data-key="accent"><span>Accent <span class="hex" data-hex="accent"></span></span></label>
+        </div>
+        <div class="field">
+          <span class="flabel">Card</span>
+          <div class="seg" data-options="CARD_STYLES" data-key="cardStyle" aria-label="Card style"></div>
+        </div>
+        <div class="field">
+          <span class="flabel">Page background</span>
+          <div class="seg" data-options="BACKGROUNDS" data-key="background" aria-label="Page background"></div>
+        </div>
+        <div class="field" id="bg-image-field">
+          <label for="f-backgroundImage">Background image link</label>
+          <input type="url" id="f-backgroundImage" data-key="backgroundImage" placeholder="https://…/picture.gif" spellcheck="false" autocomplete="off">
+          <p class="hint">A direct link to an image or GIF. Discord attachment links expire, so use a permanent link, like an image file added to this repo.</p>
+          <p class="hint error" id="bg-error" hidden>That doesn't look like a link.</p>
+        </div>
+      </section>
+
+      <!-- Show / hide -->
+      <section class="group" id="g-show" aria-labelledby="h-show">
+        <div class="group-head">
+          <h2 id="h-show">Show / hide</h2>
+          <p>Turn parts of the page on or off.</p>
+        </div>
+        <div class="switches" id="show-grid"></div>
+      </section>
+
+      <!-- Advanced -->
+      <section class="group" id="g-advanced" aria-labelledby="h-advanced">
+        <div class="group-head">
+          <h2 id="h-advanced">Advanced</h2>
+          <p>Custom CSS and backups.</p>
+        </div>
+        <div class="field">
+          <div class="label-row"><label for="f-customCss">Custom CSS</label><span class="count" data-count-for="f-customCss"></span></div>
+          <textarea id="f-customCss" class="mono" data-key="customCss" rows="6" maxlength="8000" spellcheck="false" placeholder=".card { border-radius: 28px; }"></textarea>
+          <p class="hint">Added after the page's own styles. Handy targets: <code>.card</code>, <code>.banner</code>, <code>.display</code>, <code>.names</code>, <code>.link-btn</code>, <code>.activity</code>.</p>
+        </div>
+        <div class="row wrap">
+          <button type="button" class="btn" id="export-btn">Export settings</button>
+          <button type="button" class="btn" id="import-btn">Import settings</button>
+          <input type="file" id="import-file" accept="application/json,.json" hidden>
+          <button type="button" class="btn danger" id="reset-btn">Reset design to default</button>
+        </div>
+      </section>
+    </fieldset>
+  </div>
+
+  <aside class="preview" aria-labelledby="h-preview">
+    <div class="preview-bar">
+      <h2 id="h-preview">Live preview</h2>
+      <div class="seg" id="device-seg" role="radiogroup" aria-label="Preview size">
+        <label class="opt"><input type="radio" name="device" value="desktop" checked><span>Desktop</span></label>
+        <label class="opt"><input type="radio" name="device" value="phone"><span>Phone</span></label>
+      </div>
+    </div>
+    <div class="stage" id="stage" data-device="desktop">
+      <iframe id="preview" src="index.html?preview=1" title="Live preview of your profile"></iframe>
+    </div>
+    <p class="preview-note">Only you see this preview. Visitors see your changes after you press Save.</p>
+  </aside>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="assets/shared.js?v=3"></script>
+<script>
+"use strict";
+const S = window.SiteSettings;
+const $ = (id) => document.getElementById(id);
+const el = (tag, props = {}, ...kids) => {
+  const n = Object.assign(document.createElement(tag), props);
+  kids.flat().forEach(k => k != null && n.append(k));
+  return n;
+};
+const clone = (o) => JSON.parse(JSON.stringify(o));
+const fields = $("fields");
+const KEY_NAME = "haoni.lanyardKey";
+
+let saved = { settings: S.defaults(), bio: "", pronouns: "" };   // what's live on the site
+let draft = clone(saved);                                       // what's in the form
+let discord = null;                                             // Discord user from Lanyard
+let loaded = false, saving = false;
+
+/* =====================================================================
+   API KEY (kept in this browser only)
+   ===================================================================== */
+let memKey = "";
+function getKey() {
+  try { return localStorage.getItem(KEY_NAME) || sessionStorage.getItem(KEY_NAME) || memKey; }
+  catch { return memKey; }
+}
+function setKey(k, remember) {
+  memKey = k;
+  try {
+    (remember ? localStorage : sessionStorage).setItem(KEY_NAME, k);
+    (remember ? sessionStorage : localStorage).removeItem(KEY_NAME);
+  } catch {}
+}
+function forgetKey() {
+  memKey = "";
+  try { localStorage.removeItem(KEY_NAME); sessionStorage.removeItem(KEY_NAME); } catch {}
+}
+function renderKeyState() {
+  const has = !!getKey();
+  $("key-missing").hidden = has;
+  $("key-present").hidden = !has;
+  let remembered = false;
+  try { remembered = !!localStorage.getItem(KEY_NAME); } catch {}
+  $("key-where").textContent = remembered ? "(remembered on this device)" : "(until you close this tab)";
+}
+$("key-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const k = $("key-input").value.trim();
+  if (!k || /\s/.test(k)) { toast("That doesn't look like an API key.", "error"); return; }
+  setKey(k, $("key-remember").checked);
+  $("key-input").value = "";
+  renderKeyState();
+  toast("Key added. It gets checked the first time you save.");
+});
+$("key-forget").addEventListener("click", () => { forgetKey(); renderKeyState(); toast("Key removed from this device."); });
+
+/* =====================================================================
+   BUILD THE FORM
+   ===================================================================== */
+function radio(key, value, labelText) {
+  const input = el("input", { type: "radio", name: "opt-" + key, value });
+  input.dataset.key = key;
+  return el("label", { className: "opt" }, input, el("span", { textContent: labelText }));
+}
+document.querySelectorAll("[data-options]").forEach(box => {
+  box.setAttribute("role", "radiogroup");
+  box.replaceChildren(...S[box.dataset.options].map(o => radio(box.dataset.key, o.id, o.label)));
+});
+
+// font cards (each sample is drawn in its own font)
+document.head.append(el("link", { rel: "stylesheet", href: S.fontURL(S.FONTS.map(f => f.id)) }));
+$("font-grid").replaceChildren(...S.FONTS.map(f => {
+  const input = el("input", { type: "radio", name: "opt-nameFont", value: f.id });
+  input.dataset.key = "nameFont";
+  const sample = el("span", { className: "sample" });
+  sample.style.fontFamily = S.fontFamily(f.id);
+  return el("label", { className: "font-opt" }, input,
+    el("span", { className: "font-card" }, sample, el("span", { className: "fname", textContent: f.id })));
+}));
+
+// show / hide switches
+$("show-grid").replaceChildren(...S.SHOW.map(([k, label]) => {
+  const input = el("input", { type: "checkbox" });
+  input.dataset.show = k;
+  const track = el("span", { className: "track" });
+  track.setAttribute("aria-hidden", "true");
+  return el("label", { className: "switch" }, input, track, el("span", { textContent: label }));
+}));
+
+// time zones
+let zones = [];
+try { zones = Intl.supportedValuesOf("timeZone"); } catch {}
+if (!zones.length) zones = ["America/Vancouver", "America/Los_Angeles", "America/Denver", "America/Chicago", "America/Toronto", "America/New_York", "Europe/London", "Europe/Paris", "Asia/Shanghai", "Asia/Tokyo", "Australia/Sydney"];
+$("tz-list").replaceChildren(...zones.map(z => el("option", { value: z })));
+
+/* ---------- links editor ---------- */
+function iconButton(text, label, onClick, extra = "") {
+  const b = el("button", { type: "button", className: "icon-btn " + extra, textContent: text, title: label });
+  b.setAttribute("aria-label", label);
+  b.addEventListener("click", onClick);
+  return b;
+}
+function renderLinkRows() {
+  const links = draft.settings.links;
+  $("link-list").replaceChildren(...links.map((l, i) => {
+    const label = el("input", { type: "text", className: "l-label", value: l.label || "", maxLength: S.LIMITS.linkLabel, autocomplete: "off" });
+    label.setAttribute("aria-label", `Link ${i + 1} label`);
+    const url = el("input", { type: "text", className: "l-url", value: l.url || "", placeholder: "youtube.com/@you", spellcheck: false, autocomplete: "off", inputMode: "url" });
+    url.setAttribute("aria-label", `Link ${i + 1} address`);
+    const up = iconButton("↑", "Move up", () => moveLink(i, -1));
+    const down = iconButton("↓", "Move down", () => moveLink(i, 1));
+    const del = iconButton("✕", "Remove link", () => removeLink(i), "del");
+    up.disabled = i === 0;
+    down.disabled = i === links.length - 1;
+    const row = el("div", { className: "link-row" },
+      el("span", { className: "l-ico" }),
+      el("div", { className: "l-inputs" }, label, url),
+      el("div", { className: "l-actions" }, up, down, del),
+      el("p", { className: "hint error l-err", textContent: "That doesn't look like a link.", hidden: true }));
+    updateRowIcon(row);
+    return row;
+  }));
+  $("links-empty").hidden = links.length > 0;
+  $("add-link").disabled = links.length >= S.LIMITS.links;
+}
+function updateRowIcon(row) {
+  const raw = row.querySelector(".l-url").value;
+  const url = S.safeUrl(S.normalizeUrl(raw), ["http:", "https:", "mailto:"]);
+  const info = S.linkInfo(url);
+  const ico = row.querySelector(".l-ico");
+  ico.replaceChildren(S.iconSVG(info));
+  ico.title = url ? info.name : "";
+  const bad = !!raw.trim() && !url;
+  row.classList.toggle("invalid", bad);
+  row.querySelector(".l-err").hidden = !bad;
+  row.querySelector(".l-label").placeholder = url ? info.name : "Label (optional)";
+}
+function readLinkRows() {
+  const rows = [...$("link-list").children];
+  draft.settings.links = rows.map(r => ({ label: r.querySelector(".l-label").value, url: r.querySelector(".l-url").value }));
+  rows.forEach(updateRowIcon);
+}
+function moveLink(i, d) {
+  const L = draft.settings.links, j = i + d;
+  if (j < 0 || j >= L.length) return;
+  [L[i], L[j]] = [L[j], L[i]];
+  renderLinkRows();
+  $("link-list").children[j].querySelector(d < 0 ? ".icon-btn" : ".icon-btn:nth-child(2)").focus();
+  changed();
+}
+function removeLink(i) {
+  draft.settings.links.splice(i, 1);
+  renderLinkRows();
+  changed();
+}
+$("add-link").addEventListener("click", () => {
+  if (draft.settings.links.length >= S.LIMITS.links) return;
+  draft.settings.links.push({ label: "", url: "" });
+  renderLinkRows();
+  $("link-list").lastElementChild.querySelector(".l-url").focus();
+  changed();
+});
+
+/* ---------- fill / read ---------- */
+function fillForm() {
+  const s = draft.settings;
+  fields.querySelectorAll("[data-key]").forEach(i => {
+    const v = s[i.dataset.key];
+    if (i.type === "radio") i.checked = i.value === v;
+    else if (i.type === "checkbox") i.checked = !!v;
+    else i.value = v == null ? "" : v;
+  });
+  fields.querySelectorAll("[data-show]").forEach(i => { i.checked = s.show[i.dataset.show] !== false; });
+  fields.querySelectorAll("[data-kv]").forEach(i => { i.value = draft[i.dataset.kv] || ""; });
+  renderLinkRows();
+  refreshUI();
+}
+
+fields.addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.closest(".link-row")) readLinkRows();
+  else if (t.dataset.key) {
+    if (t.type === "radio") { if (!t.checked) return; draft.settings[t.dataset.key] = t.value; }
+    else if (t.type === "checkbox") draft.settings[t.dataset.key] = t.checked;
+    else draft.settings[t.dataset.key] = t.value;
+  }
+  else if (t.dataset.show) draft.settings.show[t.dataset.show] = t.checked;
+  else if (t.dataset.kv) draft[t.dataset.kv] = t.value;
+  else return;
+  changed();
+});
+// tidy links when leaving a field (adds https:// etc.)
+fields.addEventListener("focusout", (e) => {
+  const t = e.target;
+  if (t.classList && t.classList.contains("l-url") && t.value.trim()) {
+    const url = S.safeUrl(S.normalizeUrl(t.value), ["http:", "https:", "mailto:"]);
+    if (url && url !== t.value) { t.value = url; readLinkRows(); changed(); }
+  }
+  if (t.id === "f-backgroundImage" && t.value.trim()) {
+    const url = S.safeUrl(S.normalizeUrl(t.value));
+    if (url && url !== t.value) { t.value = url; draft.settings.backgroundImage = url; changed(); }
+  }
+});
+
+function refreshUI() {
+  const s = draft.settings;
+  const eff = S.NAME_EFFECTS.find(x => x.id === s.nameEffect) || {};
+  $("name-colors-field").hidden = !!eff.noColor;
+  $("custom-name-colors").hidden = s.nameColors !== "custom";
+  $("color2-wrap").hidden = !(eff.two || s.nameEffect === "discord");
+  $("accent-wrap").hidden = s.accentSource !== "custom";
+  $("bg-image-field").hidden = s.background !== "image";
+  $("bg-error").hidden = !s.backgroundImage.trim() || !!S.safeUrl(S.normalizeUrl(s.backgroundImage));
+  $("tz-error").hidden = !s.timezone || S.validTimezone(s.timezone);
+  document.querySelectorAll("[data-hex]").forEach(h => { h.textContent = s[h.dataset.hex]; });
+  document.querySelectorAll("[data-count-for]").forEach(c => {
+    const t = $(c.dataset.countFor);
+    c.textContent = `${t.value.length} / ${t.maxLength}`;
+    c.classList.toggle("full", t.value.length >= t.maxLength);
+  });
+  const sampleName = s.displayName.trim() || (discord && (discord.global_name || discord.username)) || "HAONI";
+  document.querySelectorAll("#font-grid .sample").forEach(x => { x.textContent = sampleName; });
+}
+
+/* =====================================================================
+   DIRTY STATE, PREVIEW, SAVE
+   ===================================================================== */
+const normalized = (d) => JSON.stringify({ s: S.sanitize(d.settings), b: (d.bio || "").trim(), p: (d.pronouns || "").trim() });
+const isDirty = () => loaded && normalized(draft) !== normalized(saved);
+
+function setState(s, text) {
+  $("state").dataset.s = s;
+  $("state-text").textContent = text;
+}
+function updateDirty() {
+  if (!loaded || saving) return;
+  const dirty = isDirty();
+  $("save-btn").disabled = !dirty;
+  if (dirty) setState("dirty", "Unsaved changes");
+  else if ($("state").dataset.s !== "saved") setState("clean", "All changes saved");
+}
+function changed() {
+  refreshUI();
+  updateDirty();
+  sendPreview();
+}
+
+// live preview iframe
+const frame = $("preview");
+let frameReady = false, previewTimer = 0;
+addEventListener("message", (e) => {
+  if (e.origin !== location.origin || e.source !== frame.contentWindow) return;
+  if (e.data && e.data.type === "haoni:ready") { frameReady = true; sendPreview(true); }
+});
+// in case the preview finished loading before this script ran
+frame.addEventListener("load", () => { frameReady = true; sendPreview(true); });
+try {
+  if (frame.contentDocument && frame.contentDocument.readyState === "complete" && /preview/.test(frame.contentWindow.location.search)) frameReady = true;
+} catch {}
+function sendPreview(now) {
+  clearTimeout(previewTimer);
+  previewTimer = setTimeout(() => {
+    if (!frameReady || !frame.contentWindow) return;
+    frame.contentWindow.postMessage({
+      type: "haoni:preview",
+      settings: S.sanitize(draft.settings),
+      bio: draft.bio,
+      pronouns: draft.pronouns,
+    }, "/");
+  }, now ? 0 : 60);
+}
+
+async function lanyard(method, path, body) {
+  const key = getKey();
+  let r;
+  try {
+    r = await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}${path}`, {
+      method,
+      headers: Object.assign({ Authorization: key }, body ? { "Content-Type": "application/json" } : {}),
+      body,
+    });
+  } catch {
+    throw new Error("Couldn't reach Lanyard. Check your internet connection and try again.");
+  }
+  if (r.ok) return;
+  let msg = "";
+  try { const j = await r.json(); msg = j && j.error && j.error.message; } catch {}
+  if (r.status === 401 || r.status === 403) {
+    throw new Error("Lanyard didn't accept your API key. DM the Lanyard bot .apikey on Discord to get a fresh one.");
+  }
+  throw new Error(msg ? `Lanyard said: ${msg}` : `Lanyard returned an error (${r.status}).`);
+}
+
+async function save() {
+  if (!loaded || saving || !isDirty()) return;
+  if (!getKey()) {
+    $("g-connect").scrollIntoView({ behavior: "smooth", block: "start" });
+    showView("edit");
+    $("key-input").focus({ preventScroll: true });
+    toast("Add your Lanyard API key first.", "error");
+    return;
+  }
+  const settings = S.sanitize(draft.settings);
+  const site = JSON.stringify(settings);
+  const bio = draft.bio.trim().slice(0, S.LIMITS.bio);
+  const pronouns = draft.pronouns.trim().slice(0, S.LIMITS.pronouns);
+  if (site.length > S.KV_MAX) { toast("Settings are too big to save. Try shortening the custom CSS.", "error"); return; }
+
+  saving = true;
+  $("save-btn").disabled = true;
+  setState("saving", "Saving…");
+  try {
+    const body = { site };
+    if (bio) body.bio = bio;
+    if (pronouns) body.pronouns = pronouns;
+    await lanyard("PATCH", "/kv", JSON.stringify(body));
+    // empty fields: remove the key instead of saving an empty value
+    if (!bio && saved.bio) await lanyard("DELETE", "/kv/bio");
+    if (!pronouns && saved.pronouns) await lanyard("DELETE", "/kv/pronouns");
+    saved = { settings, bio, pronouns };
+    draft = clone(saved);
+    saving = false;
+    fillForm();
+    sendPreview(true);
+    setState("saved", "Saved · live now");
+    $("save-btn").disabled = true;
+    toast("Saved! Your site has updated for everyone.");
+  } catch (err) {
+    saving = false;
+    setState("error", "Couldn't save");
+    $("save-btn").disabled = false;
+    toast(err.message, "error");
+  }
+}
+$("save-btn").addEventListener("click", save);
+addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") { e.preventDefault(); save(); }
+});
+addEventListener("beforeunload", (e) => { if (isDirty()) { e.preventDefault(); e.returnValue = ""; } });
+
+/* =====================================================================
+   LOAD CURRENT SETTINGS
+   ===================================================================== */
+async function load() {
+  const notice = $("load-notice");
+  notice.className = "notice";
+  notice.textContent = "Loading your current settings from Lanyard…";
+  notice.hidden = false;
+  setState("loading", "Loading…");
+  try {
+    const r = await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}`);
+    const j = await r.json();
+    if (!j.success) {
+      const code = j.error && j.error.code;
+      throw new Error(code === "user_not_monitored"
+        ? "Lanyard isn't tracking your account yet. Join the Lanyard Discord server (discord.gg/lanyard), then try again."
+        : (j.error && j.error.message) || "Lanyard returned an error.");
+    }
+    discord = j.data.discord_user;
+    const kv = j.data.kv || {};
+    saved = { settings: S.sanitize(kv.site), bio: kv.bio || "", pronouns: kv.pronouns || "" };
+    draft = clone(saved);
+    loaded = true;
+    fields.disabled = false;
+    notice.hidden = true;
+    showIdentity();
+    fillForm();
+    setState("clean", "All changes saved");
+    sendPreview(true);
+  } catch (err) {
+    notice.className = "notice error";
+    notice.replaceChildren(
+      (err instanceof TypeError ? "Couldn't reach Lanyard. Check your internet connection." : err.message) + " ",
+      el("button", { type: "button", className: "btn small", textContent: "Try again", onclick: load }));
+    setState("error", "Not loaded");
+  }
+}
+function showIdentity() {
+  if (!discord) return;
+  const name = discord.global_name || discord.display_name || discord.username;
+  $("me-name").textContent = `${name} · @${discord.username}`;
+  if (discord.avatar) {
+    const url = `https://cdn.discordapp.com/avatars/${discord.id}/${discord.avatar}.png?size=64`;
+    $("me-avatar").src = url;
+    $("favicon").href = url;
+  }
+  $("f-displayName").placeholder = name;
+  $("f-username").placeholder = discord.username;
+  $("f-tabTitle").placeholder = name;
+}
+
+/* =====================================================================
+   EXPORT / IMPORT / RESET
+   ===================================================================== */
+$("export-btn").addEventListener("click", () => {
+  const data = { settings: S.sanitize(draft.settings), bio: draft.bio, pronouns: draft.pronouns };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }));
+  const a = el("a", { href: url, download: "haoni-site-settings.json" });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+$("import-btn").addEventListener("click", () => $("import-file").click());
+$("import-file").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  try {
+    if (file.size > 200000) throw new Error("too big");
+    const data = JSON.parse(await file.text());
+    if (!data || typeof data !== "object") throw new Error("not an object");
+    draft.settings = S.sanitize(data.settings || data);
+    if (typeof data.bio === "string") draft.bio = data.bio.slice(0, S.LIMITS.bio);
+    if (typeof data.pronouns === "string") draft.pronouns = data.pronouns.slice(0, S.LIMITS.pronouns);
+    fillForm();
+    changed();
+    toast("Imported. Press Save to publish it.");
+  } catch {
+    toast("That file isn't a settings export.", "error");
+  }
+});
+$("reset-btn").addEventListener("click", () => {
+  if (!confirm("Reset the whole design to default? Your About Me and pronouns are kept. Nothing changes on your site until you press Save.")) return;
+  draft.settings = S.defaults();
+  fillForm();
+  changed();
+  toast("Design reset. Press Save to publish it.");
+});
+
+/* =====================================================================
+   VIEW SWITCHING (phone layout) + PREVIEW SIZE
+   ===================================================================== */
+function showView(v) {
+  $("layout").dataset.view = v;
+  $("view-edit").setAttribute("aria-selected", v === "edit");
+  $("view-preview").setAttribute("aria-selected", v === "preview");
+}
+$("view-edit").addEventListener("click", () => showView("edit"));
+$("view-preview").addEventListener("click", () => showView("preview"));
+$("device-seg").addEventListener("change", (e) => { $("stage").dataset.device = e.target.value; });
+
+/* ---------- toast ---------- */
+let toastTimer = 0;
+function toast(msg, kind = "ok") {
+  const t = $("toast");
+  t.textContent = msg;
+  t.dataset.kind = kind;
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.hidden = true; }, kind === "error" ? 7000 : 3500);
+}
+
+/* ---------- go ---------- */
+renderKeyState();
+fillForm();
+load();
+</script>
+</body>
+</html>
