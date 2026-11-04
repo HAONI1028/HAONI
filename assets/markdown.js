@@ -47,10 +47,13 @@
   }
 
   /* ---------- helpers used by the rules ---------- */
-  const inline = (st) => Object.assign({}, st, { inline: true });
+  const MAX_DEPTH = 12;     // deeper nesting is shown as plain text (stops "*****…" from overflowing)
+  const MAX_LENGTH = 4000;  // longer text is cut (Discord's own limit is far lower)
+  const inline = (st) => Object.assign({}, st, { inline: true, depth: (st.depth || 0) + 1 });
   function wrap(tag, inner, st, cls) {
     const n = node(tag, cls);
-    n.append(...parse(inner, inline(st)));
+    if ((st.depth || 0) >= MAX_DEPTH) n.textContent = inner;
+    else n.append(...parse(inner, inline(st)));
     return n;
   }
   function link(href) {
@@ -63,7 +66,7 @@
   }
   function quote(content, st) {
     const q = node("blockquote", "md-quote");
-    q.append(...parse(content, Object.assign({}, st, { inQuote: true }), true));
+    q.append(...parse(content, Object.assign({}, st, { inQuote: true, depth: (st.depth || 0) + 1 }), true));
     return q;
   }
 
@@ -280,7 +283,7 @@
   function render(source, options = {}) {
     const frag = document.createDocumentFragment();
     const st = { emojiURL: options.emojiURL, mentionName: options.mentionName };
-    frag.append(...parse(String(source == null ? "" : source).replace(/\r\n?/g, "\n"), st, true));
+    frag.append(...parse(String(source == null ? "" : source).slice(0, MAX_LENGTH).replace(/\r\n?/g, "\n"), st, true));
     return frag;
   }
 
