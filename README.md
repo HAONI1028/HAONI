@@ -35,7 +35,13 @@ updates instantly. Use **Export settings** for a backup.
 - **If the key ever leaks:** DM the Lanyard bot `.apikey` — that makes a new key and the old one
   stops working. Then open the panel, click **Forgot password?**, and set it up with the new key.
   (Every `.apikey` replaces the key, so do this whenever you run it.)
-- **Stay logged in** keeps the key in that browser, so only use it on your own device.
+- **After you log in**, the key is kept in memory, and any copy saved in the browser (for reloads
+  or "Stay logged in") is encrypted with a browser key that can't be exported, so copying it from
+  F12 → Application is useless on another computer. Logging out deletes both. A normal session
+  locks itself after 30 minutes without activity. Still: someone using your *logged-in* browser
+  can act as you, so only tick "Stay logged in" on your own device.
+- **Both pages block outside scripts** (Content-Security-Policy), the panel won't run inside
+  another site's frame, and its live preview runs in a sealed-off sandbox.
 - **Use a long, unique password** — anyone can download the encrypted key and try guesses offline.
 - **Turn on two-factor authentication for your GitHub account**: anyone who can push to this
   repo could change the panel's code.

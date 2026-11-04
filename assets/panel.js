@@ -2,6 +2,7 @@
    Control panel logic (moved out of panel.html so the page can use a
    Content-Security-Policy that only allows scripts from this site).
    ===================================================================== */
+(function () {
 "use strict";
 if (window.top !== window.self) {
   document.body.replaceChildren(Object.assign(document.createElement("p"), {
@@ -18,7 +19,6 @@ const el = (tag, props = {}, ...kids) => {
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
 const fields = $("fields");
-const KEY_NAME = "haoni.panelSession";
 // The old (password-less) panel saved the plain API key under this name with
 // "remember" on by default. Remove it so it can't skip the login; keep it in
 // memory only, to fill in the one-time password setup.
@@ -34,25 +34,6 @@ let draft = clone(saved);                                       // what's in the
 let discord = null;                                             // Discord user from Lanyard
 let loaded = false, saving = false;
 
-/* =====================================================================
-   API KEY (kept in this browser only)
-   ===================================================================== */
-let memKey = "";
-function getKey() {
-  try { return localStorage.getItem(KEY_NAME) || sessionStorage.getItem(KEY_NAME) || memKey; }
-  catch { return memKey; }
-}
-function setKey(k, remember) {
-  memKey = k;
-  try {
-    (remember ? localStorage : sessionStorage).setItem(KEY_NAME, k);
-    (remember ? sessionStorage : localStorage).removeItem(KEY_NAME);
-  } catch {}
-}
-function forgetKey() {
-  memKey = "";
-  try { localStorage.removeItem(KEY_NAME); sessionStorage.removeItem(KEY_NAME); } catch {}
-}
 /* =====================================================================
    LOGIN
    Your Lanyard API key is encrypted with your password (PBKDF2-SHA256,
@@ -85,6 +66,86 @@ async function openLock(lock, password) {
   const aes = await deriveAes(password, fromB64(L.salt), iter);
   return td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(L.iv) }, aes, fromB64(L.ct)));
 }
+
+/* =====================================================================
+   SESSION
+   After you log in, the API key lives in memory. To survive a reload (or
+   with "Stay logged in"), an ENCRYPTED copy goes in browser storage. The
+   key that unlocks it is a non-exportable browser key kept in IndexedDB,
+   so what F12 → Application shows is useless if copied anywhere else.
+   Logging out wipes both. Idle sessions lock after 30 minutes.
+   ===================================================================== */
+const SESSION_NAME = "haoni.panelSession", IDLE_LIMIT = 30 * 60 * 1000;
+let memKey = "", stayLoggedIn = false, lastActive = Date.now();
+const getKey = () => memKey;
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("haoni-panel", 1);
+    req.onupgradeneeded = () => req.result.createObjectStore("keys");
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idb(mode, run) {
+  const db = await idbOpen();
+  try {
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction("keys", mode), req = run(tx.objectStore("keys"));
+      tx.oncomplete = () => resolve(req && req.result);
+      tx.onerror = tx.onabort = () => reject(tx.error);
+    });
+  } finally { db.close(); }
+}
+async function deviceKey(create) {
+  let k = await idb("readonly", st => st.get("device"));
+  if (!k && create) {
+    k = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+    await idb("readwrite", st => st.put(k, "device"));
+  }
+  return k;
+}
+async function startSession(key, remember) {
+  memKey = key; stayLoggedIn = remember; lastActive = Date.now();
+  try {
+    const dk = await deviceKey(true);
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, dk, te.encode(key)));
+    const sealed = JSON.stringify({ iv: toB64(iv), ct: toB64(ct) });
+    (remember ? localStorage : sessionStorage).setItem(SESSION_NAME, sealed);
+    (remember ? sessionStorage : localStorage).removeItem(SESSION_NAME);
+  } catch {}   // storage blocked: stay logged in for this page only
+}
+async function resumeSession() {
+  try {
+    const tab = sessionStorage.getItem(SESSION_NAME), kept = localStorage.getItem(SESSION_NAME);
+    if (!tab && !kept) return false;
+    const dk = await deviceKey(false);
+    const { iv, ct } = JSON.parse(tab || kept);
+    memKey = td.decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: fromB64(iv) }, dk, fromB64(ct)));
+    stayLoggedIn = !tab;
+    lastActive = Date.now();
+    return true;
+  } catch {
+    memKey = "";
+    return false;
+  }
+}
+async function endSession() {
+  memKey = ""; stayLoggedIn = false;
+  try { localStorage.removeItem(SESSION_NAME); sessionStorage.removeItem(SESSION_NAME); } catch {}
+  try { await idb("readwrite", st => st.delete("device")); } catch {}
+}
+for (const ev of ["pointerdown", "keydown", "wheel", "touchstart"]) {
+  addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true });
+}
+setInterval(async () => {
+  if (memKey && !stayLoggedIn && Date.now() - lastActive > IDLE_LIMIT) {
+    await endSession();
+    showGate(lockStr ? "login" : "setup");
+    toast("Logged out after 30 minutes without activity. Your unsaved changes are still here.");
+  }
+}, 30000);
 
 function showGate(mode, message) {   // "loading" | "login" | "setup" | "reset" | "error"
   document.body.classList.add("locked");
@@ -130,7 +191,7 @@ $("login-form").addEventListener("submit", async (e) => {
   btn.disabled = true; btn.textContent = "Checking…";
   try {
     const key = await openLock(lockStr, pw.value);
-    setKey(key, $("login-stay").checked);
+    await startSession(key, $("login-stay").checked);
     pw.value = ""; fails = 0;
     hideGate();
     toast("Logged in.");
@@ -158,7 +219,7 @@ $("setup-form").addEventListener("submit", async (e) => {
     await lanyard("PATCH", "/kv", JSON.stringify({ [LOCK_KEY]: lock }), key);   // Lanyard checks the key here
     lockStr = lock;
     legacyKey = "";
-    setKey(key, $("setup-stay").checked);
+    await startSession(key, $("setup-stay").checked);
     ["setup-key", "setup-pw", "setup-pw2"].forEach(id => { $(id).value = ""; });
     hideGate();
     toast("Password set. You're logged in.");
@@ -176,9 +237,9 @@ $("to-reset").addEventListener("click", () => showGate("reset"));
 $("to-login").addEventListener("click", () => showGate("login"));
 $("gate-retry").addEventListener("click", () => load());
 
-$("logout-btn").addEventListener("click", () => {
+$("logout-btn").addEventListener("click", async () => {
   if (isDirty() && !confirm("You have unsaved changes. Log out anyway?")) return;
-  forgetKey();
+  await endSession();
   showGate(lockStr ? "login" : "setup");
 });
 $("chpw-toggle").addEventListener("click", () => {
@@ -404,7 +465,7 @@ function changed() {
 const frame = $("preview");
 let frameReady = false, previewTimer = 0;
 addEventListener("message", (e) => {
-  if (e.origin !== location.origin || e.source !== frame.contentWindow) return;
+  if (e.source !== frame.contentWindow) return;   // only our own (sandboxed) preview frame
   if (e.data && e.data.type === "haoni:ready") { frameReady = true; sendPreview(true); }
 });
 // in case the preview finished loading before this script ran
@@ -421,7 +482,7 @@ function sendPreview(now) {
       settings: S.sanitize(draft.settings),
       bio: draft.bio,
       pronouns: draft.pronouns,
-    }, "/");
+    }, "*");   // the sandboxed preview has no origin to name; it only gets design settings, never the key
   }, now ? 0 : 60);
 }
 
@@ -495,6 +556,7 @@ async function load() {
   notice.textContent = "Loading your current settings from Lanyard…";
   notice.hidden = false;
   setState("loading", "Loading…");
+  const resumed = resumeSession();   // unlock a saved session while the data loads
   try {
     const r = await fetch(`${S.LANYARD_API}/users/${S.DISCORD_ID}`);
     const j = await r.json();
@@ -508,7 +570,7 @@ async function load() {
     const kv = j.data.kv || {};
     lockStr = kv[LOCK_KEY] || "";
     if (!lockStr) showGate("setup");          // first time: create a password
-    else if (getKey()) hideGate();            // still logged in on this device
+    else if (await resumed) hideGate();       // still logged in on this device
     else showGate("login");
     saved = { settings: S.sanitize(kv.site), bio: kv.bio || "", pronouns: kv.pronouns || "" };
     draft = clone(saved);
@@ -719,3 +781,4 @@ function toast(msg, kind = "ok") {
 showGate("loading");
 fillForm();
 load();
+})();
