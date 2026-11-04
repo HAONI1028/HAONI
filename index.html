@@ -323,9 +323,6 @@
     font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
     color:var(--muted);margin:0 0 8px;
   }
-  .about p{margin:0;white-space:pre-line;overflow-wrap:anywhere}
-  .about a{color:var(--accent);font-weight:600;text-decoration:underline;text-underline-offset:3px}
-  .about img.emoji{width:22px;height:22px;vertical-align:-5px}
   .caret{display:inline-block;width:2px;height:1.05em;margin-left:2px;vertical-align:-2px;background:currentColor;animation:blink 1s steps(1) infinite}
   @keyframes blink{50%{opacity:0}}
 
@@ -414,6 +411,7 @@
     .display::before,.display::after{display:none}
   }
 </style>
+<link rel="stylesheet" href="assets/markdown.css?v=4">
 <style id="custom-css"></style>
 </head>
 <body>
@@ -474,8 +472,9 @@
   <p class="foot" id="foot">made by <span id="foot-name">haoni</span> · <a href="https://github.com/HAONI1028/haoni" target="_blank" rel="noopener">source</a></p>
 </main>
 
-<script src="assets/shared.js?v=3"></script>
-<script src="assets/effects.js?v=3"></script>
+<script src="assets/shared.js?v=4"></script>
+<script src="assets/effects.js?v=4"></script>
+<script src="assets/markdown.js?v=4"></script>
 <script>
 /* =====================================================================
    Everything on this page comes from Discord (live), plus the look you
@@ -567,20 +566,33 @@ function fmtDuration(ms) {
   return h ? `${h}:${String(m).padStart(2, "0")}:${sec}` : `${m}:${sec}`;
 }
 
-// Text with [links](https://…), <:emoji:id>, <a:emoji:id> and bare URLs
-function richText(text) {
-  const out = [];
-  const re = /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)|<(a?):(\w+):(\d+)>|(https?:\/\/[^\s<]+)/g;
-  let last = 0, m;
-  while ((m = re.exec(text))) {
-    out.push(text.slice(last, m.index));
-    if (m[1]) out.push(el("a", { href: m[2], target: "_blank", rel: "noopener", textContent: m[1] }));
-    else if (m[4]) out.push(el("img", { className: "emoji", src: emojiURL(m[5], m[3] === "a"), alt: `:${m[4]}:`, title: `:${m[4]}:` }));
-    else out.push(el("a", { href: m[6], target: "_blank", rel: "noopener", textContent: m[6] }));
-    last = m.index + m[0].length;
-  }
-  out.push(text.slice(last));
-  return out.filter(p => p !== "");
+/* ---------- Discord formatting for the About Me ---------- */
+const MD = window.DiscordMarkdown;
+const mentionNames = {};   // user id -> display name (looked up once)
+function mentionName(id) {
+  if (id === ID) return state.user.global_name || state.user.username;
+  if (mentionNames[id]) return mentionNames[id];
+  lookupMention(id);
+  return "unknown-user";
+}
+async function lookupMention(id) {
+  if (id in mentionNames) return;
+  mentionNames[id] = "";
+  try {
+    const { data } = await (await fetch(`https://japi.rest/discord/v1/user/${id}`)).json();
+    const name = data && (data.global_name || data.username);
+    if (!name) return;
+    mentionNames[id] = name;
+    const roots = [$("bio")].concat(bioSource ? [bioSource] : []);
+    for (const r of roots) r.querySelectorAll(`.md-mention[data-mention="${id}"]`).forEach(n => { n.textContent = "@" + name; });
+  } catch {}
+}
+const mdOptions = { emojiURL: (id, animated) => emojiURL(id, animated), mentionName };
+function formatted(text) {
+  if (MD) return MD.render(text, mdOptions);
+  const frag = document.createDocumentFragment(); // formatter didn't load: plain text
+  frag.append(text);
+  return frag;
 }
 
 /* ---------- look: theme, background, card, font, effects, show/hide, custom CSS ---------- */
@@ -730,46 +742,79 @@ const graphemes = (str) => (typeof Intl.Segmenter === "function"
   ? [...new Intl.Segmenter(undefined, { granularity: "grapheme" }).segment(str)].map(x => x.segment)
   : [...str]);
 
-async function typewrite(p, parts, run) {
+// Types `source` (formatted DOM) into `target`, keeping every bold/link/quote/list in place.
+let bioSource = null;
+async function typewrite(target, source, run) {
   const caret = el("span", { className: "caret" });
-  p.append(caret);
-  for (const part of parts) {
-    if (run !== typeRun) return;
-    if (typeof part === "string" || part.tagName === "A") {
-      const text = typeof part === "string" ? part : part.textContent;
-      const target = typeof part === "string" ? document.createTextNode("") : part;
-      if (target !== part) p.insertBefore(target, caret);
-      else { part.textContent = ""; p.insertBefore(part, caret); }
-      for (const ch of graphemes(text)) {
-        if (run !== typeRun) return;
-        if (target.nodeType === 3) target.data += ch; else target.textContent += ch;
-        await sleep(ch === "\n" ? 200 : 32);
+  target.append(caret);
+  const walk = async (from, into) => {
+    for (const n of [...from.childNodes]) {
+      if (run !== typeRun) return false;
+      if (n.nodeType === 3) {
+        const t = document.createTextNode("");
+        into.append(t);
+        t.after(caret);
+        for (const ch of graphemes(n.data)) {
+          if (run !== typeRun) return false;
+          t.data += ch;
+          await sleep(ch === "\n" ? 200 : 32);
+        }
+      } else if (n.nodeType === 1) {
+        const copy = n.cloneNode(false);
+        into.append(copy);
+        if (!n.firstChild) { copy.after(caret); await sleep(80); continue; }
+        if (!(await walk(n, copy))) return false;
       }
-    } else {
-      p.insertBefore(part, caret);
-      await sleep(80);
     }
-  }
+    return true;
+  };
+  await walk(source, target);
+  if (run === typeRun) bioSource = null;
 }
 
 function renderBio() {
   const s = settings();
-  const bio = bioText().trim();
+  const bio = bioText().replace(/^\n+|\s+$/g, "");
   const show = s.show.bio && !!bio;
   $("bio-section").hidden = !show;
   const key = show ? bio + "\u0000" + s.typewriter : null;
   if (key === bioKey) return; // unchanged — don't restart the typewriter
   bioKey = key;
   typeRun++;
+  bioSource = null;
   if (!show) { $("bio").replaceChildren(); return; }
   if (s.typewriter && !reducedMotion) {
-    const shown = el("p");
+    const shown = el("div", { className: "md" });
     shown.setAttribute("aria-hidden", "true");
-    $("bio").replaceChildren(el("p", { className: "sr-only" }, richText(bio)), shown);
-    typewrite(shown, richText(bio), typeRun);
+    $("bio").replaceChildren(el("div", { className: "md sr-only" }, formatted(bio)), shown);
+    bioSource = el("div", {}, formatted(bio));
+    typewrite(shown, bioSource, typeRun);
   } else {
-    $("bio").replaceChildren(el("p", {}, richText(bio)));
+    $("bio").replaceChildren(el("div", { className: "md" }, formatted(bio)));
   }
+}
+
+// spoilers: click (or Enter/Space) to reveal, like Discord
+function revealSpoiler(sp) {
+  sp.classList.add("shown");
+  sp.removeAttribute("role");
+  sp.removeAttribute("tabindex");
+  sp.removeAttribute("title");
+}
+$("bio").addEventListener("click", (e) => {
+  const sp = e.target.closest(".md-spoiler:not(.shown)");
+  if (sp) { e.preventDefault(); revealSpoiler(sp); }   // don't follow a link that's still hidden
+});
+$("bio").addEventListener("keydown", (e) => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches(".md-spoiler:not(.shown)")) {
+    e.preventDefault();
+    revealSpoiler(e.target);
+  }
+});
+// keep "in 3 days" / "2 hours ago" timestamps current
+function tickRelativeTimes() {
+  if (!MD) return;
+  document.querySelectorAll('#bio .md-time[data-style="R"]').forEach(t => { t.textContent = MD.formatTimestamp(+t.dataset.ts, "R"); });
 }
 function renderPronouns() {
   const pr = pronounsText().trim();
@@ -1107,6 +1152,7 @@ if (state.siteRaw) reveal();          // returning visitor: we already know the 
 setTimeout(reveal, 1500);              // never stay hidden if Discord is slow
 setInterval(tickTimers, 1000);
 setInterval(renderFacts, 15000);
+setInterval(tickRelativeTimes, 30000);
 connectSocket();
 loadProfileExtras();
 setInterval(loadProfileExtras, 10 * 60 * 1000);

@@ -34,8 +34,17 @@ The bio and pronouns can also be set by DMing the Lanyard bot:
 
 `.del bio` removes it.
 
+## Bio formatting
+The bio uses Discord's formatting, so you can write it the same way as on Discord:
+`**bold**`, `*italic*`, `__underline__`, `~~strike~~`, `||spoiler||`, `` `code` ``,
+```` ```code blocks``` ````, `> quotes`, `# headings`, `-# small text`, `- lists`,
+`[links](https://…)`, custom emoji `<:name:id>`, timestamps `<t:1700000000:R>` and
+mentions `<@id>`. The control panel has a formatting toolbar (Ctrl+B / I / U work too) and a
+timestamp maker.
+
 ## Files
 - `index.html` — the profile page
 - `panel.html` — the control panel
 - `assets/shared.js` — settings format, defaults and validation (used by both pages)
 - `assets/effects.js` — particles, cursor effects and card tilt
+- `assets/markdown.js` + `assets/markdown.css` — Discord-style formatting for the bio
