@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://cdn.discordapp.com; connect-src https://api.lanyard.rest; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src https://cdn.discordapp.com; connect-src https://api.lanyard.rest https://*.workers.dev; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'">
 <meta name="referrer" content="no-referrer">
 <title>Control Panel</title>
 <link rel="icon" id="favicon" href="https://cdn.discordapp.com/avatars/955378599412764722/4544384a53cc2459cbefc546aec48267.png?size=64">
@@ -309,7 +309,10 @@
   .btn.wide{width:100%;height:40px;margin-top:6px}
   .linkish{justify-self:center;border:0;background:none;color:var(--accent-text);font-weight:600;font-size:13px;cursor:pointer;padding:4px}
   .linkish:hover{text-decoration:underline}
-  .chpw{margin-top:4px}
+  .login-box{display:grid;gap:10px}
+  .btn.discord{background:#5865F2;border-color:#5865F2;color:#fff;gap:10px}
+  .btn.discord:hover:not(:disabled){filter:brightness(1.1);border-color:#5865F2}
+  .btn.discord svg{width:20px;height:20px;fill:currentColor}
   .check{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--muted);cursor:pointer}
   .check input{accent-color:var(--accent);width:16px;height:16px;margin:0}
   .ok-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;font-weight:600;color:var(--ok-text)}
@@ -388,34 +391,16 @@
       </div>
     </div>
 
-    <form id="login-form" hidden>
-      <input type="text" name="username" autocomplete="username" value="haoni1028" hidden>
-      <label for="login-pw">Password</label>
-      <input type="password" id="login-pw" autocomplete="current-password" required>
+    <div id="login-box" class="login-box" hidden>
+      <button type="button" class="btn discord wide" id="discord-login">Log in with Discord</button>
       <label class="check"><input type="checkbox" id="login-stay"> Stay logged in (only on your own device)</label>
       <p class="hint error" id="login-error" role="alert" hidden></p>
-      <button class="btn primary wide" type="submit" id="login-btn">Log in</button>
-      <button type="button" class="linkish" id="to-reset">Forgot password?</button>
-    </form>
+      <p class="hint">Only the site owner's Discord account can get in.</p>
+    </div>
 
-    <form id="setup-form" hidden>
-      <input type="text" name="username" autocomplete="username" value="haoni1028" hidden>
-      <ol class="steps" style="margin:0">
-        <li>On Discord, DM the Lanyard bot <code>.apikey</code></li>
-        <li>Paste the key it sends you, then choose a password.</li>
-      </ol>
-      <label for="setup-key">Lanyard API key</label>
-      <input type="password" id="setup-key" autocomplete="off" spellcheck="false" required>
-      <label for="setup-pw">New password</label>
-      <input type="password" id="setup-pw" autocomplete="new-password" minlength="12" required>
-      <label for="setup-pw2">Type it again</label>
-      <input type="password" id="setup-pw2" autocomplete="new-password" required>
-      <p class="hint">At least 12 characters. A few random words, like <code>purple-taco-rocket-lamp</code>, work well. Don't reuse a password from another site.</p>
-      <label class="check"><input type="checkbox" id="setup-stay"> Stay logged in (only on your own device)</label>
-      <p class="hint error" id="setup-error" role="alert" hidden></p>
-      <button class="btn primary wide" type="submit" id="setup-btn">Create password</button>
-      <button type="button" class="linkish" id="to-login" hidden>Back to log in</button>
-    </form>
+    <div id="notset-box" hidden>
+      <p class="notice" style="margin:0">The Discord login server isn't set up yet. Follow <code>worker/SETUP.md</code> in the repo, then put the server's address in <code>assets/shared.js</code> (<code>AUTH_SERVER</code>).</p>
+    </div>
 
     <div id="gate-error" hidden>
       <p class="notice error" id="gate-error-text" style="margin:0 0 10px"></p>
@@ -461,21 +446,12 @@
     <section class="group" id="g-account" aria-labelledby="h-account">
       <div class="group-head">
         <h2 id="h-account">Account</h2>
-        <p>You're logged in. Your password unlocks your Lanyard API key, which is kept encrypted on Lanyard, so you can log in from any device.</p>
+        <p>You're logged in with Discord. Your Lanyard API key stays on your login server and never reaches this browser.</p>
       </div>
       <div class="row wrap">
         <button type="button" class="btn" id="logout-btn">Log out</button>
-        <button type="button" class="btn" id="chpw-toggle" aria-expanded="false" aria-controls="chpw-form">Change password</button>
+        <button type="button" class="btn" id="logout-all-btn">Log out everywhere</button>
       </div>
-      <form id="chpw-form" class="chpw" hidden>
-        <input type="text" name="username" autocomplete="username" value="haoni1028" hidden>
-        <div class="grid-2">
-          <div class="field"><label for="chpw-1">New password</label><input type="password" id="chpw-1" autocomplete="new-password" minlength="12" required></div>
-          <div class="field"><label for="chpw-2">Type it again</label><input type="password" id="chpw-2" autocomplete="new-password" required></div>
-        </div>
-        <p class="hint error" id="chpw-error" role="alert" hidden style="margin-top:8px"></p>
-        <div class="row"><button class="btn primary" type="submit" id="chpw-btn">Save new password</button></div>
-      </form>
       <p class="notice" id="load-notice">Loading your current settings from Lanyard…</p>
     </section>
 
@@ -698,8 +674,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
-<script src="assets/shared.js?v=5"></script>
+<script src="assets/shared.js?v=6"></script>
 <script src="assets/markdown.js?v=5"></script>
-<script src="assets/panel.js?v=6"></script>
+<script src="assets/panel.js?v=8"></script>
 </body>
 </html>
