@@ -12,7 +12,6 @@ const S = window.SiteSettings;
 const FX = window.SiteEffects || { setParticles() {}, setCursor() {}, setTilt() {}, refreshColors() {} };
 const ID = S.DISCORD_ID;
 const CDN = "https://cdn.discordapp.com";
-const PREVIEW = new URLSearchParams(location.search).has("preview");
 const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // What the page shows before the live data arrives (or if it can't load).
@@ -66,15 +65,14 @@ const state = {
   presence: null,
   settings: S.defaults(),
   siteRaw: null,      // last raw settings string seen (to skip needless re-renders)
-  preview: null,      // settings sent by the control panel's preview
   revealed: false,
 };
 const createdAt = new Date(Number((BigInt(ID) >> 22n) + 1420070400000n));
 
-const settings = () => (state.preview ? state.preview.settings : state.settings);
+const settings = () => state.settings;
 const kv = () => (state.presence && state.presence.kv) || {};
-const bioText = () => String(state.preview ? state.preview.bio : kv().bio || "").slice(0, 2000);
-const pronounsText = () => String(state.preview ? state.preview.pronouns : kv().pronouns || "").slice(0, S.LIMITS.pronouns);
+const bioText = () => String(kv().bio || "").slice(0, 2000);
+const pronounsText = () => String(kv().pronouns || "").slice(0, S.LIMITS.pronouns);
 
 /* ---------- helpers ---------- */
 const hex = (n) => "#" + n.toString(16).padStart(6, "0");
@@ -127,7 +125,7 @@ function formatted(text) {
 function applyTheme() {
   const s = settings(), root = document.documentElement;
   let mode = s.themeMode;
-  const saved = PREVIEW ? null : store.get("theme");
+  const saved = store.get("theme");
   if (saved === "dark" || saved === "light") mode = saved;
   if (mode === "dark" || mode === "light") root.dataset.theme = mode;
   else delete root.dataset.theme;
@@ -551,7 +549,7 @@ $("theme-btn").onclick = () => {
     ? root.dataset.theme === "light"
     : matchMedia("(prefers-color-scheme: light)").matches;
   root.dataset.theme = isLight ? "dark" : "light";
-  if (!PREVIEW) store.set("theme", root.dataset.theme);
+  store.set("theme", root.dataset.theme);
   FX.refreshColors();
 };
 matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => FX.refreshColors());
@@ -586,8 +584,8 @@ function applyPresence(d) {
   if (raw !== state.siteRaw) {
     state.siteRaw = raw;
     state.settings = S.sanitize(raw);
-    if (!PREVIEW) store.set("haoni.site", raw || null);
-    if (!state.preview) applyLook();
+    store.set("haoni.site", raw || null);
+    applyLook();
   }
   renderAll();
   reveal();
@@ -652,26 +650,7 @@ function startPolling() {
   pollTimer = setInterval(pollOnce, 30000);
 }
 
-/* ---------- live preview for the control panel ---------- */
-if (PREVIEW) {
-  addEventListener("message", (e) => {
-    if (parent === window || e.source !== parent) return;   // only the page showing this preview
-    const m = e.data;
-    if (!m || m.type !== "haoni:preview") return;
-    state.preview = {
-      settings: S.sanitize(m.settings),
-      bio: typeof m.bio === "string" ? m.bio.slice(0, S.LIMITS.bio) : "",
-      pronouns: typeof m.pronouns === "string" ? m.pronouns.slice(0, S.LIMITS.pronouns) : "",
-    };
-    applyLook();
-    renderAll();
-    reveal();
-  });
-  if (parent !== window) parent.postMessage({ type: "haoni:ready" }, "*");   // no data in it, just "ready"
-}
-
-/* ---------- go ---------- */
-if (!PREVIEW) {
+{
   const cached = store.get("haoni.site");
   if (cached) { state.siteRaw = cached; state.settings = S.sanitize(cached); }
 }

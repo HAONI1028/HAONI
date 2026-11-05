@@ -1,5 +1,5 @@
 /* =====================================================================
-   Shared by index.html (the profile) and panel.html (the control panel).
+   Used by index.html (the profile).
    Holds the settings format, its defaults and validation, the font and
    effect lists, and link-icon detection.
 
@@ -14,9 +14,6 @@
   const LANYARD_API = "https://api.lanyard.rest/v1";
   const LANYARD_SOCKET = "wss://api.lanyard.rest/socket";
   const KV_MAX = 30000; // Lanyard's per-value limit
-  // Your Discord login server (worker/worker.js on Cloudflare), e.g.
-  // "https://haoni-panel.yourname.workers.dev". See worker/SETUP.md.
-  const AUTH_SERVER = "";
 
   const LIMITS = {
     displayName: 32,
@@ -364,7 +361,7 @@
   }
 
   window.SiteSettings = {
-    DISCORD_ID, LANYARD_API, LANYARD_SOCKET, KV_MAX, LIMITS, AUTH_SERVER,
+    DISCORD_ID, LANYARD_API, LANYARD_SOCKET, KV_MAX, LIMITS,
     FONTS, NAME_EFFECTS, NAME_SIZES, NAME_COLORS, PARTICLES, CURSORS, THEME_MODES,
     ACCENT_SOURCES, CARD_STYLES, BACKGROUNDS, LINK_STYLES, SHOW, PLATFORMS,
     defaults, sanitize, isHex, safeUrl, normalizeUrl, validTimezone,
