@@ -32,8 +32,6 @@ mentions `<@id>`.
 
 ## Security
 - **No secrets are stored in this repo.**
-- **If your Lanyard API key ever leaks:** DM the Lanyard bot `.apikey` — that makes a new key and
-  the old one stops working.
 - **The page blocks outside scripts** (Content-Security-Policy).
 
 ## Files
