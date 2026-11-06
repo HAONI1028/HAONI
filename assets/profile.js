@@ -71,6 +71,7 @@ const createdAt = new Date(Number((BigInt(ID) >> 22n) + 1420070400000n));
 
 const settings = () => state.settings;
 const kv = () => (state.presence && state.presence.kv) || {};
+const iconSource = () => kv();
 const bioText = () => String(kv().bio || "").slice(0, 2000);
 const pronounsText = () => String(kv().pronouns || "").slice(0, S.LIMITS.pronouns);
 
@@ -357,21 +358,33 @@ function renderLinks() {
   box.className = "links links-" + s.linkStyle;
   box.replaceChildren(...links.map(l => {
     const info = S.linkInfo(l.url);
-    const label = l.label || info.name;
+    const invite = S.discordInvite(l.url);
+    const server = invite ? servers[invite] : null;     // filled in once the invite lookup returns
+    if (invite && !(invite in servers)) {
+      servers[invite] = null;
+      S.lookupInvite(invite).then(g => { servers[invite] = g; if (g) renderLinks(); });
+    }
+    const label = l.label || (server && server.name) || info.name;
+    // icon: your uploaded one, else the Discord server's, else the site's own logo
+    const src = linkIcon(l.icon) || S.serverIconURL(server, !reducedMotion);
+    const icon = src ? el("img", { className: "ico", src, alt: "", loading: "lazy", decoding: "async", referrerPolicy: "no-referrer" }) : S.iconSVG(info);
+    if (src) icon.addEventListener("error", () => icon.replaceWith(S.iconSVG(info)), { once: true });
     const a = el("a", { href: l.url, target: "_blank", rel: "noopener me" });
     if (info.color) a.style.setProperty("--brand", info.color);
     if (s.linkStyle === "icons") {
       a.className = "link-icon";
       a.title = label;
       a.setAttribute("aria-label", label);
-      a.append(S.iconSVG(info));
+      a.append(icon);
     } else {
       a.className = "link-btn";
-      a.append(S.iconSVG(info), el("span", { className: "l", textContent: label }), el("span", { className: "go", textContent: "↗" }));
+      a.append(icon, el("span", { className: "l", textContent: label }), el("span", { className: "go", textContent: "↗" }));
     }
     return a;
   }));
 }
+const servers = {};   // invite code → { id, name, icon } (or null while loading / if not found)
+const linkIcon = (id) => S.validIconId(id) ? S.safeIcon(iconSource()[S.ICON_PREFIX + id]) : null;
 
 /* ---------- presence (status, platforms, custom status, activities, Spotify) ---------- */
 const STATUS_NAMES = { online: "Online", idle: "Idle", dnd: "Do Not Disturb", offline: "Offline" };

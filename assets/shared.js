@@ -217,8 +217,57 @@
     const url = safeUrl(normalizeUrl(typeof l.url === "string" ? l.url : ""), ["http:", "https:", "mailto:"]);
     if (!url) return null;
     const label = typeof l.label === "string" ? l.label.trim().slice(0, LIMITS.linkLabel) : "";
-    return { label, url };
+    const out = { label, url };
+    if (validIconId(l.icon)) out.icon = l.icon;   // an uploaded icon, stored in Lanyard KV as linkicon_<id>
+    return out;
   }
+
+  /* ---------- custom link icons ---------- */
+  // Uploaded icons live in their own Lanyard KV keys (linkicon_<id>) as small data: images.
+  const ICON_PREFIX = "linkicon_";
+  const ICON_MAX = 20000;   // characters; a 64×64 picture is usually 2,000–8,000
+  const validIconId = (id) => typeof id === "string" && /^[a-z0-9]{8}$/.test(id);
+  // Only plain raster pictures (no SVG, which can carry code), as base64 data: URLs.
+  const safeIcon = (v) => typeof v === "string" && v.length <= ICON_MAX &&
+    /^data:image\/(png|webp|jpeg);base64,[A-Za-z0-9+/]+={0,2}$/.test(v) ? v : null;
+
+  // Discord server invites: discord.gg/CODE, discord.com/invite/CODE
+  function discordInvite(url) {
+    let u;
+    try { u = new URL(url); } catch { return null; }
+    if (u.protocol !== "https:" && u.protocol !== "http:") return null;
+    const host = u.hostname.toLowerCase().replace(/^www\./, "");
+    let m = null;
+    if (host === "discord.gg") m = /^\/([A-Za-z0-9-]{2,32})\/?$/.exec(u.pathname);
+    else if (host === "discord.com" || host === "discordapp.com") m = /^\/invite\/([A-Za-z0-9-]{2,32})\/?$/.exec(u.pathname);
+    return m ? m[1] : null;
+  }
+  // Looks up the server behind an invite (public, no key needed). Remembered for 6 hours.
+  const inviteCache = {};
+  function lookupInvite(code) {
+    if (inviteCache[code]) return inviteCache[code];
+    const key = "haoni.invite." + code;
+    try {
+      const hit = JSON.parse(localStorage.getItem(key) || "null");
+      if (hit && hit.t > Date.now() - 6 * 36e5) return (inviteCache[code] = Promise.resolve(hit.g));
+    } catch {}
+    return (inviteCache[code] = fetch(`https://discord.com/api/v10/invites/${encodeURIComponent(code)}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(j => {
+        const g = j && j.guild;
+        const out = g && /^\d{5,25}$/.test(g.id) ? {
+          id: g.id,
+          name: typeof g.name === "string" ? g.name.slice(0, 100) : "",
+          icon: typeof g.icon === "string" && /^(a_)?[0-9a-f]{32}$/.test(g.icon) ? g.icon : null,
+        } : null;
+        try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), g: out })); } catch {}
+        return out;
+      })
+      .catch(() => null));
+  }
+  const serverIconURL = (g, animate) => g && g.icon
+    ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.${animate && g.icon.startsWith("a_") ? "gif" : "png"}?size=64`
+    : null;
 
   // Accepts an object or a JSON string; always returns a complete, valid settings object.
   function sanitize(raw) {
@@ -366,6 +415,7 @@
     ACCENT_SOURCES, CARD_STYLES, BACKGROUNDS, LINK_STYLES, SHOW, PLATFORMS,
     defaults, sanitize, isHex, safeUrl, normalizeUrl, validTimezone,
     fontById, fontURL, fontFamily, linkInfo, iconSVG,
+    ICON_PREFIX, ICON_MAX, validIconId, safeIcon, discordInvite, lookupInvite, serverIconURL,
     discordIcon: () => iconSVG(PLATFORMS.find(p => p.key === "discord")),
   };
 })();
